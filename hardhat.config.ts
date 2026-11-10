@@ -56,6 +56,7 @@ const config: HardhatUserConfig = {
       },
       chainId: 11155111,
       url: SEPOLIA_RPC_URL,
+      timeout: 60_000,
     },
   },
   paths: {
