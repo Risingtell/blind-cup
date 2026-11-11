@@ -6,7 +6,7 @@ export const READ_RPC =
   (import.meta.env.VITE_SEPOLIA_RPC_URL as string | undefined) ?? "https://ethereum-sepolia-rpc.publicnode.com";
 export const EXPLORER = "https://sepolia.etherscan.io";
 export const FAUCET = "https://cloud.google.com/application/web3/faucet/ethereum/sepolia";
-export const REPO = "https://github.com/";
+export const REPO = "https://github.com/Risingtell/blind-cup";
 
 /** Sepolia's base fee is near zero, so the tip is the cost. 0.01 gwei gets mined and a match costs about 0.0001 test ETH. */
 export const TIP_GWEI = "0.01";

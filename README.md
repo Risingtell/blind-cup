@@ -8,7 +8,7 @@ opened, not even after the game.
 
 - Contract (Sepolia):
   [`0x77A7a9eb769e63130E696a09C64c6E5F1DF58dbB`](https://sepolia.etherscan.io/address/0x77A7a9eb769e63130E696a09C64c6E5F1DF58dbB)
-- Play: the web app in [`web/`](web) (live link coming with the hosted demo)
+- **Play: [blind-cup.vercel.app](https://blind-cup.vercel.app)** (Sepolia; a match costs about 0.0002 test ETH)
 - 19 tests (contract, the bot's mind, full matches on the mock chain); 97% statement coverage of the contract
 
 ## How a round works

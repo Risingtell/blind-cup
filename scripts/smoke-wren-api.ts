@@ -1,24 +1,36 @@
 /**
- * Calls Wren's hosted handler in-process against Sepolia: opens a table, asks her to join, bids, asks her
- * to move, and relays each signed answer. Proves the endpoint end to end before it is deployed.
+ * Exercises Wren's endpoint against Sepolia: opens a table, asks her to join, bids, asks her to move, and
+ * relays each signed answer. By default it calls the handler in-process (with her key from Hardhat vars);
+ * with WREN_URL set it calls the hosted endpoint instead.
  *
  * npx hardhat run --network sepolia scripts/smoke-wren-api.ts
+ * WREN_URL=https://blind-cup.vercel.app/api/wren npx hardhat run --network sepolia scripts/smoke-wren-api.ts
  */
-import { HDNodeWallet } from "ethers";
 import { deployments, ethers, network } from "hardhat";
 import { vars } from "hardhat/config";
 
 async function main() {
   const at = (await deployments.get("BlindCup")).address;
-  // Wren is account 1 of the test mnemonic. The key stays in this process and is never printed.
-  process.env.WREN_PRIVATE_KEY = HDNodeWallet.fromPhrase(
-    vars.get("MNEMONIC"),
-    undefined,
-    "m/44'/60'/0'/0/1",
-  ).privateKey;
-  process.env.BLINDCUP_ADDRESS = at;
-  process.env.SEPOLIA_RPC_URL = (network.config as { url: string }).url;
-  const { GET, POST } = await import("../api/wren");
+  const remote = process.env.WREN_URL;
+  let GET: () => Promise<Response>;
+  let POST: (r: Request) => Promise<Response>;
+  if (remote) {
+    GET = () => fetch(remote);
+    POST = (r) =>
+      fetch(remote, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: r.body,
+        duplex: "half",
+      } as RequestInit);
+  } else {
+    // Her key stays in this process and is never printed.
+    process.env.WREN_PRIVATE_KEY = vars.get("WREN_PRIVATE_KEY");
+    process.env.BLINDCUP_ADDRESS = at;
+    process.env.SEPOLIA_RPC_URL = (network.config as { url: string }).url;
+    ({ GET, POST } = await import("../api/wren"));
+  }
+  console.log(remote ? `calling ${remote}` : "calling the handler in-process");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   type Answer = any;
   const call = async (body: object): Promise<Answer> => {
