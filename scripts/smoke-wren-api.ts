@@ -4,7 +4,7 @@
  * with WREN_URL set it calls the hosted endpoint instead.
  *
  * npx hardhat run --network sepolia scripts/smoke-wren-api.ts
- * WREN_URL=https://blind-cup.vercel.app/api/wren npx hardhat run --network sepolia scripts/smoke-wren-api.ts
+ * WREN_URL=https://blindcup.onepeg.app/api/wren npx hardhat run --network sepolia scripts/smoke-wren-api.ts
  */
 import { deployments, ethers, network } from "hardhat";
 import { vars } from "hardhat/config";
