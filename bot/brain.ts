@@ -110,7 +110,12 @@ const byCheapest = (dice: readonly number[], standing: Bid | null, persona: Pers
  * Her habit: she always opens on the face she holds most. Her tell: when she bids what she
  * believes is false, she usually taps her cup (and rarely does it on an honest bid).
  */
-export function decide(dice: readonly number[], standing: Bid | null, rng: () => number, persona: Persona = WREN): Decision {
+export function decide(
+  dice: readonly number[],
+  standing: Bid | null,
+  rng: () => number,
+  persona: Persona = WREN,
+): Decision {
   if (dice.length !== DICE) throw new Error(`expected ${DICE} dice`);
   const tellFor = (bluff: boolean) => rng() < (bluff ? persona.tellOnBluff : persona.tellOnHonest);
 

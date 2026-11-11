@@ -10,7 +10,12 @@ import { line } from "../../bot/persona";
 import { readOwnDice, readVerdict } from "./fhe";
 import { wrenCard, wrenJoin, wrenMove } from "./wren";
 
-export type Reveal = { stage: "sealed" | "counting" | "word"; held?: boolean; bid: { quantity: number; face: number }; challengerIsMe: boolean };
+export type Reveal = {
+  stage: "sealed" | "counting" | "word";
+  held?: boolean;
+  bid: { quantity: number; face: number };
+  challengerIsMe: boolean;
+};
 
 export type View = {
   table: TableState | null;
@@ -60,7 +65,10 @@ export class Match extends EventTarget {
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       const rejected = /user rejected|denied|ACTION_REJECTED/i.test(msg);
-      this.set({ error: rejected ? "You declined in your wallet." : msg.slice(0, 200), retry: { label, run: () => this.guard(label, run) } });
+      this.set({
+        error: rejected ? "You declined in your wallet." : msg.slice(0, 200),
+        retry: { label, run: () => this.guard(label, run) },
+      });
     } finally {
       this.set({ busy: false });
     }
@@ -80,7 +88,9 @@ export class Match extends EventTarget {
 
   private async seatWren(id: bigint, block: number) {
     const { signature } = await wrenJoin(id, block);
-    this.set({ status: "Wren signed her seat. Confirm in your wallet to bring her to the table (this rolls both cups)." });
+    this.set({
+      status: "Wren signed her seat. Confirm in your wallet to bring her to the table (this rolls both cups).",
+    });
     const join = await this.wallet.send("joinTableBySig", id, signature);
     this.set({ lastTx: join.hash });
     await this.after(id, join);
@@ -162,12 +172,18 @@ export class Match extends EventTarget {
     if (mySeat < 0) return this.set({ status: "You are not seated at this table.", myTurn: false });
 
     if (t.phase === Phase.Open) {
-      this.set({ status: `Table ${t.id} is open. Send your friend the link; the cups roll when they sit.`, myTurn: false });
+      this.set({
+        status: `Table ${t.id} is open. Send your friend the link; the cups roll when they sit.`,
+        myTurn: false,
+      });
       return this.watch(t);
     }
 
     if (t.round !== this.diceRound && t.phase !== Phase.Done) {
-      this.set({ status: `Round ${t.round}: lifting your cup. Your wallet asks once per visit to let you see your own dice.`, myDice: null });
+      this.set({
+        status: `Round ${t.round}: lifting your cup. Your wallet asks once per visit to let you see your own dice.`,
+        myDice: null,
+      });
       const handles = await cupHandles(t.id, t.round, mySeat, t.block);
       const dice = await readOwnDice(this.wallet.signer, handles);
       this.diceRound = t.round;
@@ -182,8 +198,13 @@ export class Match extends EventTarget {
       return this.set({
         reveal: undefined,
         myTurn: false,
-        status: won ? `You win the match, ${t.wins[mySeat]} to ${t.wins[1 - mySeat]}.` : `${name} wins the match, ${t.wins[1 - mySeat]} to ${t.wins[mySeat]}.`,
-        retry: { label: this.view.opponent === "wren" ? "Play Wren again" : "Open a new table", run: () => (this.view.opponent === "wren" ? this.playWren() : this.openForFriend()) },
+        status: won
+          ? `You win the match, ${t.wins[mySeat]} to ${t.wins[1 - mySeat]}.`
+          : `${name} wins the match, ${t.wins[1 - mySeat]} to ${t.wins[mySeat]}.`,
+        retry: {
+          label: this.view.opponent === "wren" ? "Play Wren again" : "Open a new table",
+          run: () => (this.view.opponent === "wren" ? this.playWren() : this.openForFriend()),
+        },
       });
     }
 
@@ -191,7 +212,10 @@ export class Match extends EventTarget {
 
     const myTurn = t.turn === mySeat;
     if (myTurn) {
-      return this.set({ myTurn: true, status: t.bid ? "Your move: raise the bid, or call it a lie." : "Your move: open the bidding." });
+      return this.set({
+        myTurn: true,
+        status: t.bid ? "Your move: raise the bid, or call it a lie." : "Your move: open the bidding.",
+      });
     }
     this.set({ myTurn: false });
     if (this.view.opponent === "wren") return this.wrenTurn(t);
@@ -217,7 +241,11 @@ export class Match extends EventTarget {
   private async reveal(t: TableState) {
     const bid = t.bid!;
     const challengerIsMe = !same(t.bidder, this.wallet.address); // the caller is whoever did not make the bid
-    this.set({ myTurn: false, reveal: { stage: "sealed", bid, challengerIsMe }, status: "Both cups stay sealed. The contract counted them blind." });
+    this.set({
+      myTurn: false,
+      reveal: { stage: "sealed", bid, challengerIsMe },
+      status: "Both cups stay sealed. The contract counted them blind.",
+    });
     await sleep(1400);
     this.set({ reveal: { stage: "counting", bid, challengerIsMe }, status: "counting..." });
     const [{ held, proof }] = await Promise.all([readVerdict(t.verdictHandle), sleep(2200)]);
@@ -238,7 +266,10 @@ export class Match extends EventTarget {
     if (this.settling) return;
     this.settling = true;
     try {
-      this.set({ status: "Settle the round on chain with the Zama proof. Confirm in your wallet (this also rolls the next cups)." });
+      this.set({
+        status:
+          "Settle the round on chain with the Zama proof. Confirm in your wallet (this also rolls the next cups).",
+      });
       const r = await this.wallet.send("resolve", t.id, held, proof);
       this.set({ lastTx: r.hash });
       await this.after(t.id, r);

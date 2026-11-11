@@ -13,10 +13,13 @@ import { deriveSecret, sepoliaInstance, userDecryptDice } from "../bot/relayer";
 import type { BlindCup } from "../types";
 
 const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body, (_k, v) => (typeof v === "bigint" ? v.toString() : v)), {
-    status,
-    headers: { "content-type": "application/json", "cache-control": "no-store" },
-  });
+  new Response(
+    JSON.stringify(body, (_k, v) => (typeof v === "bigint" ? v.toString() : v)),
+    {
+      status,
+      headers: { "content-type": "application/json", "cache-control": "no-store" },
+    },
+  );
 
 let ctxPromise: Promise<BotContext> | undefined;
 
@@ -55,7 +58,8 @@ export async function POST(request: Request): Promise<Response> {
   }
   const { tableId, action, block } = body;
   if (typeof tableId !== "string" && typeof tableId !== "number") return json({ error: "tableId is required" }, 400);
-  if (block !== undefined && (typeof block !== "number" || !Number.isInteger(block) || block < 0)) return json({ error: "block must be a block number" }, 400);
+  if (block !== undefined && (typeof block !== "number" || !Number.isInteger(block) || block < 0))
+    return json({ error: "block must be a block number" }, 400);
   let id: bigint;
   try {
     id = BigInt(tableId);

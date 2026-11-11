@@ -27,11 +27,36 @@ const hex = (n: number) => "#" + n.toString(16).padStart(6, "0");
 
 const PIPS: Record<number, [number, number][]> = {
   1: [[0, 0]],
-  2: [[-1, -1], [1, 1]],
-  3: [[-1, -1], [0, 0], [1, 1]],
-  4: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
-  5: [[-1, -1], [1, -1], [0, 0], [-1, 1], [1, 1]],
-  6: [[-1, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [1, 1]],
+  2: [
+    [-1, -1],
+    [1, 1],
+  ],
+  3: [
+    [-1, -1],
+    [0, 0],
+    [1, 1],
+  ],
+  4: [
+    [-1, -1],
+    [1, -1],
+    [-1, 1],
+    [1, 1],
+  ],
+  5: [
+    [-1, -1],
+    [1, -1],
+    [0, 0],
+    [-1, 1],
+    [1, 1],
+  ],
+  6: [
+    [-1, -1],
+    [1, -1],
+    [-1, 0],
+    [1, 0],
+    [-1, 1],
+    [1, 1],
+  ],
 };
 
 /** Draws one die. `face` is 0..5 (shown 1..6); a shown 1 is wild and gets a brass rim. */
@@ -48,9 +73,25 @@ export function drawDie(g: Phaser.GameObjects.Graphics, x: number, y: number, si
 function drawCup(g: Phaser.GameObjects.Graphics, w: number, h: number) {
   g.clear();
   g.fillStyle(C.leatherDark, 1);
-  g.fillPoints([new Phaser.Math.Vector2(-w * 0.5, h * 0.5), new Phaser.Math.Vector2(w * 0.5, h * 0.5), new Phaser.Math.Vector2(w * 0.38, -h * 0.5), new Phaser.Math.Vector2(-w * 0.38, -h * 0.5)], true);
+  g.fillPoints(
+    [
+      new Phaser.Math.Vector2(-w * 0.5, h * 0.5),
+      new Phaser.Math.Vector2(w * 0.5, h * 0.5),
+      new Phaser.Math.Vector2(w * 0.38, -h * 0.5),
+      new Phaser.Math.Vector2(-w * 0.38, -h * 0.5),
+    ],
+    true,
+  );
   g.fillStyle(C.leather, 1);
-  g.fillPoints([new Phaser.Math.Vector2(-w * 0.44, h * 0.42), new Phaser.Math.Vector2(w * 0.3, h * 0.42), new Phaser.Math.Vector2(w * 0.22, -h * 0.44), new Phaser.Math.Vector2(-w * 0.34, -h * 0.44)], true);
+  g.fillPoints(
+    [
+      new Phaser.Math.Vector2(-w * 0.44, h * 0.42),
+      new Phaser.Math.Vector2(w * 0.3, h * 0.42),
+      new Phaser.Math.Vector2(w * 0.22, -h * 0.44),
+      new Phaser.Math.Vector2(-w * 0.34, -h * 0.44),
+    ],
+    true,
+  );
   g.fillStyle(C.brass, 1);
   g.fillRect(-w * 0.5, h * 0.36, w, h * 0.1);
   g.fillRect(-w * 0.38, -h * 0.5, w * 0.76, h * 0.07);
@@ -88,16 +129,27 @@ export class TableScene extends Phaser.Scene {
     g.fillStyle(C.felt, 1).fillEllipse(W / 2, H / 2 + 10, W * 0.9, H * 0.84);
     g.lineStyle(2, C.brass, 0.25).strokeEllipse(W / 2, H / 2 + 10, W * 0.62, H * 0.5);
 
-    this.oppName = this.add.text(W / 2, 46, "", { fontFamily: DISPLAY, fontSize: "30px", color: hex(C.bone) }).setOrigin(0.5);
-    this.oppLine = this.add.text(W / 2, 80, "", { fontFamily: BODY, fontSize: "18px", color: hex(C.brass), fontStyle: "italic" }).setOrigin(0.5);
+    this.oppName = this.add
+      .text(W / 2, 46, "", { fontFamily: DISPLAY, fontSize: "30px", color: hex(C.bone) })
+      .setOrigin(0.5);
+    this.oppLine = this.add
+      .text(W / 2, 80, "", { fontFamily: BODY, fontSize: "18px", color: hex(C.brass), fontStyle: "italic" })
+      .setOrigin(0.5);
 
     const wg = this.add.graphics();
     drawCup(wg, 120, 110);
     this.wrenCup = this.add.container(W / 2, 170, [wg]);
-    this.tap = this.add.text(W / 2 + 92, 150, "tap tap", { fontFamily: BODY, fontSize: "16px", color: hex(C.bone) }).setOrigin(0, 0.5).setAlpha(0);
+    this.tap = this.add
+      .text(W / 2 + 92, 150, "tap tap", { fontFamily: BODY, fontSize: "16px", color: hex(C.bone) })
+      .setOrigin(0, 0.5)
+      .setAlpha(0);
 
-    this.bidLabel = this.add.text(W / 2, 262, "", { fontFamily: BODY, fontSize: "13px", color: hex(C.brass) }).setOrigin(0.5);
-    this.bidQty = this.add.text(W / 2 - 18, 312, "", { fontFamily: DISPLAY, fontSize: "64px", color: hex(C.bone) }).setOrigin(1, 0.5);
+    this.bidLabel = this.add
+      .text(W / 2, 262, "", { fontFamily: BODY, fontSize: "13px", color: hex(C.brass) })
+      .setOrigin(0.5);
+    this.bidQty = this.add
+      .text(W / 2 - 18, 312, "", { fontFamily: DISPLAY, fontSize: "64px", color: hex(C.bone) })
+      .setOrigin(1, 0.5);
     this.bidDie = this.add.graphics();
 
     const mg = this.add.graphics();
@@ -105,14 +157,27 @@ export class TableScene extends Phaser.Scene {
     this.myCup = this.add.container(W / 2 - 300, 470, [mg]).setAngle(-28);
     this.dice = this.add.graphics();
 
-    this.score = this.add.text(W / 2, H - 22, "", { fontFamily: BODY, fontSize: "14px", color: hex(C.bone) }).setOrigin(0.5).setAlpha(0.8);
-    this.idle = this.add.text(W / 2, H / 2, "", { fontFamily: DISPLAY, fontSize: "44px", color: hex(C.bone), align: "center" }).setOrigin(0.5);
+    this.score = this.add
+      .text(W / 2, H - 22, "", { fontFamily: BODY, fontSize: "14px", color: hex(C.bone) })
+      .setOrigin(0.5)
+      .setAlpha(0.8);
+    this.idle = this.add
+      .text(W / 2, H / 2, "", { fontFamily: DISPLAY, fontSize: "44px", color: hex(C.bone), align: "center" })
+      .setOrigin(0.5);
 
     this.veil = this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.72).setAlpha(0);
-    this.counting = this.add.text(W / 2, H / 2, "counting...", { fontFamily: DISPLAY, fontSize: "56px", color: hex(C.bone) }).setOrigin(0.5).setAlpha(0);
-    this.word = this.add.text(W / 2, H / 2, "", { fontFamily: DISPLAY, fontSize: "170px", color: hex(C.brass) }).setOrigin(0.5).setAlpha(0);
+    this.counting = this.add
+      .text(W / 2, H / 2, "counting...", { fontFamily: DISPLAY, fontSize: "56px", color: hex(C.bone) })
+      .setOrigin(0.5)
+      .setAlpha(0);
+    this.word = this.add
+      .text(W / 2, H / 2, "", { fontFamily: DISPLAY, fontSize: "170px", color: hex(C.brass) })
+      .setOrigin(0.5)
+      .setAlpha(0);
 
-    this.render(this.view ?? { table: null, mySeat: null, opponent: null, myDice: null, status: "", busy: false, myTurn: false });
+    this.render(
+      this.view ?? { table: null, mySeat: null, opponent: null, myDice: null, status: "", busy: false, myTurn: false },
+    );
   }
 
   render(v: View) {
@@ -123,7 +188,9 @@ export class TableScene extends Phaser.Scene {
     this.oppName.setText(opp);
     const done = t?.phase === 3;
     const iWon = done && v.mySeat !== null && t!.winner.toLowerCase() === t!.players[v.mySeat].toLowerCase();
-    this.idle.setText(!t ? "PULL UP A CHAIR" : done ? (iWon ? "YOU WIN" : `${opp} WINS`) : "").setColor(done && !iWon ? hex(C.red) : hex(C.bone));
+    this.idle
+      .setText(!t ? "PULL UP A CHAIR" : done ? (iWon ? "YOU WIN" : `${opp} WINS`) : "")
+      .setColor(done && !iWon ? hex(C.red) : hex(C.bone));
     this.idle.setFontSize(done ? 96 : 44);
     this.wrenCup.setVisible(Boolean(t));
     this.myCup.setVisible(Boolean(t));
@@ -156,7 +223,13 @@ export class TableScene extends Phaser.Scene {
         v.myDice.forEach((d, i) => drawDie(this.dice, W / 2 - 160 + i * 80, 470, 62, d));
         this.dice.setAlpha(0).setY(30);
         this.tweens.add({ targets: this.dice, alpha: 1, y: 0, duration: 450, ease: "Back.Out" });
-        this.tweens.add({ targets: this.myCup, angle: { from: 0, to: -28 }, x: { from: W / 2, to: W / 2 - 300 }, duration: 500, ease: "Cubic.Out" });
+        this.tweens.add({
+          targets: this.myCup,
+          angle: { from: 0, to: -28 },
+          x: { from: W / 2, to: W / 2 - 300 },
+          duration: 500,
+          ease: "Cubic.Out",
+        });
       }
     }
 
@@ -166,7 +239,14 @@ export class TableScene extends Phaser.Scene {
       this.oppLine.setText(`"${v.wren.says}"`).setAlpha(0);
       this.tweens.add({ targets: this.oppLine, alpha: 1, duration: 300 });
       if (v.wren.tell) {
-        this.tweens.add({ targets: this.wrenCup, angle: { from: 0, to: 5 }, yoyo: true, repeat: 1, duration: 110, ease: "Sine.InOut" });
+        this.tweens.add({
+          targets: this.wrenCup,
+          angle: { from: 0, to: 5 },
+          yoyo: true,
+          repeat: 1,
+          duration: 110,
+          ease: "Sine.InOut",
+        });
         this.tweens.add({ targets: this.tap, alpha: { from: 0.9, to: 0 }, duration: 900, delay: 100 });
       }
     }
@@ -192,7 +272,13 @@ export class TableScene extends Phaser.Scene {
       this.time.delayedCall(260, () => this.cameras.main.shake(140, 0.006));
     } else if (r.stage === "counting") {
       this.counting.setAlpha(1);
-      this.countingTween = this.tweens.add({ targets: this.counting, alpha: { from: 1, to: 0.35 }, yoyo: true, repeat: -1, duration: 520 });
+      this.countingTween = this.tweens.add({
+        targets: this.counting,
+        alpha: { from: 1, to: 0.35 },
+        yoyo: true,
+        repeat: -1,
+        duration: 520,
+      });
     } else {
       this.counting.setAlpha(0);
       this.word.setText(r.held ? "HELD" : "LIAR").setColor(hex(r.held ? C.brass : C.red));

@@ -148,7 +148,9 @@ a {
   background: transparent;
   color: var(--bone);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 .btn:hover:not(:disabled) {
   background: var(--bone);

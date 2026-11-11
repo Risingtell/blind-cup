@@ -1,828 +1,828 @@
 [
- {
-  "inputs": [],
-  "stateMutability": "nonpayable",
-  "type": "constructor"
- },
- {
-  "inputs": [],
-  "name": "BadBid",
-  "type": "error"
- },
- {
-  "inputs": [],
-  "name": "ECDSAInvalidSignature",
-  "type": "error"
- },
- {
-  "inputs": [
-   {
-    "internalType": "uint256",
-    "name": "length",
-    "type": "uint256"
-   }
-  ],
-  "name": "ECDSAInvalidSignatureLength",
-  "type": "error"
- },
- {
-  "inputs": [
-   {
-    "internalType": "bytes32",
-    "name": "s",
-    "type": "bytes32"
-   }
-  ],
-  "name": "ECDSAInvalidSignatureS",
-  "type": "error"
- },
- {
-  "inputs": [],
-  "name": "InvalidKMSSignatures",
-  "type": "error"
- },
- {
-  "inputs": [],
-  "name": "InvalidShortString",
-  "type": "error"
- },
- {
-  "inputs": [],
-  "name": "NoBidToChallenge",
-  "type": "error"
- },
- {
-  "inputs": [],
-  "name": "NotBidding",
-  "type": "error"
- },
- {
-  "inputs": [],
-  "name": "NotOpen",
-  "type": "error"
- },
- {
-  "inputs": [],
-  "name": "NotRevealing",
-  "type": "error"
- },
- {
-  "inputs": [],
-  "name": "NotYourTurn",
-  "type": "error"
- },
- {
-  "inputs": [],
-  "name": "SeatTaken",
-  "type": "error"
- },
- {
-  "inputs": [
-   {
-    "internalType": "string",
-    "name": "str",
-    "type": "string"
-   }
-  ],
-  "name": "StringTooLong",
-  "type": "error"
- },
- {
-  "inputs": [],
-  "name": "TooEarly",
-  "type": "error"
- },
- {
-  "inputs": [],
-  "name": "ZamaProtocolUnsupported",
-  "type": "error"
- },
- {
-  "anonymous": false,
-  "inputs": [
-   {
-    "indexed": true,
-    "internalType": "uint256",
-    "name": "tableId",
-    "type": "uint256"
-   },
-   {
-    "indexed": false,
-    "internalType": "uint8",
-    "name": "round",
-    "type": "uint8"
-   },
-   {
-    "indexed": true,
-    "internalType": "address",
-    "name": "bidder",
-    "type": "address"
-   },
-   {
-    "indexed": false,
-    "internalType": "uint8",
-    "name": "quantity",
-    "type": "uint8"
-   },
-   {
-    "indexed": false,
-    "internalType": "uint8",
-    "name": "face",
-    "type": "uint8"
-   }
-  ],
-  "name": "BidPlaced",
-  "type": "event"
- },
- {
-  "anonymous": false,
-  "inputs": [
-   {
-    "indexed": true,
-    "internalType": "uint256",
-    "name": "tableId",
-    "type": "uint256"
-   },
-   {
-    "indexed": false,
-    "internalType": "uint8",
-    "name": "round",
-    "type": "uint8"
-   },
-   {
-    "indexed": true,
-    "internalType": "address",
-    "name": "challenger",
-    "type": "address"
-   },
-   {
-    "indexed": false,
-    "internalType": "bytes32",
-    "name": "verdictHandle",
-    "type": "bytes32"
-   }
-  ],
-  "name": "Challenged",
-  "type": "event"
- },
- {
-  "anonymous": false,
-  "inputs": [
-   {
-    "indexed": true,
-    "internalType": "uint256",
-    "name": "tableId",
-    "type": "uint256"
-   },
-   {
-    "indexed": false,
-    "internalType": "uint8",
-    "name": "round",
-    "type": "uint8"
-   }
-  ],
-  "name": "CupsRolled",
-  "type": "event"
- },
- {
-  "anonymous": false,
-  "inputs": [],
-  "name": "EIP712DomainChanged",
-  "type": "event"
- },
- {
-  "anonymous": false,
-  "inputs": [
-   {
-    "indexed": true,
-    "internalType": "uint256",
-    "name": "tableId",
-    "type": "uint256"
-   },
-   {
-    "indexed": true,
-    "internalType": "address",
-    "name": "winner",
-    "type": "address"
-   },
-   {
-    "indexed": false,
-    "internalType": "bool",
-    "name": "byForfeit",
-    "type": "bool"
-   }
-  ],
-  "name": "MatchWon",
-  "type": "event"
- },
- {
-  "anonymous": false,
-  "inputs": [
-   {
-    "indexed": true,
-    "internalType": "uint256",
-    "name": "tableId",
-    "type": "uint256"
-   },
-   {
-    "indexed": true,
-    "internalType": "address",
-    "name": "guest",
-    "type": "address"
-   }
-  ],
-  "name": "PlayerJoined",
-  "type": "event"
- },
- {
-  "anonymous": false,
-  "inputs": [
-   {
-    "indexed": false,
-    "internalType": "bytes32[]",
-    "name": "handlesList",
-    "type": "bytes32[]"
-   },
-   {
-    "indexed": false,
-    "internalType": "bytes",
-    "name": "abiEncodedCleartexts",
-    "type": "bytes"
-   }
-  ],
-  "name": "PublicDecryptionVerified",
-  "type": "event"
- },
- {
-  "anonymous": false,
-  "inputs": [
-   {
-    "indexed": true,
-    "internalType": "uint256",
-    "name": "tableId",
-    "type": "uint256"
-   },
-   {
-    "indexed": false,
-    "internalType": "uint8",
-    "name": "round",
-    "type": "uint8"
-   },
-   {
-    "indexed": false,
-    "internalType": "bool",
-    "name": "bidHeld",
-    "type": "bool"
-   },
-   {
-    "indexed": true,
-    "internalType": "address",
-    "name": "roundWinner",
-    "type": "address"
-   }
-  ],
-  "name": "RoundResolved",
-  "type": "event"
- },
- {
-  "anonymous": false,
-  "inputs": [
-   {
-    "indexed": true,
-    "internalType": "uint256",
-    "name": "tableId",
-    "type": "uint256"
-   },
-   {
-    "indexed": true,
-    "internalType": "address",
-    "name": "host",
-    "type": "address"
-   }
-  ],
-  "name": "TableOpened",
-  "type": "event"
- },
- {
-  "inputs": [],
-  "name": "BID_TYPEHASH",
-  "outputs": [
-   {
-    "internalType": "bytes32",
-    "name": "",
-    "type": "bytes32"
-   }
-  ],
-  "stateMutability": "view",
-  "type": "function"
- },
- {
-  "inputs": [],
-  "name": "CHALLENGE_TYPEHASH",
-  "outputs": [
-   {
-    "internalType": "bytes32",
-    "name": "",
-    "type": "bytes32"
-   }
-  ],
-  "stateMutability": "view",
-  "type": "function"
- },
- {
-  "inputs": [],
-  "name": "DICE",
-  "outputs": [
-   {
-    "internalType": "uint8",
-    "name": "",
-    "type": "uint8"
-   }
-  ],
-  "stateMutability": "view",
-  "type": "function"
- },
- {
-  "inputs": [],
-  "name": "FACES",
-  "outputs": [
-   {
-    "internalType": "uint8",
-    "name": "",
-    "type": "uint8"
-   }
-  ],
-  "stateMutability": "view",
-  "type": "function"
- },
- {
-  "inputs": [],
-  "name": "JOIN_TYPEHASH",
-  "outputs": [
-   {
-    "internalType": "bytes32",
-    "name": "",
-    "type": "bytes32"
-   }
-  ],
-  "stateMutability": "view",
-  "type": "function"
- },
- {
-  "inputs": [],
-  "name": "MOVE_TIMEOUT",
-  "outputs": [
-   {
-    "internalType": "uint64",
-    "name": "",
-    "type": "uint64"
-   }
-  ],
-  "stateMutability": "view",
-  "type": "function"
- },
- {
-  "inputs": [],
-  "name": "ROUNDS_TO_WIN",
-  "outputs": [
-   {
-    "internalType": "uint8",
-    "name": "",
-    "type": "uint8"
-   }
-  ],
-  "stateMutability": "view",
-  "type": "function"
- },
- {
-  "inputs": [],
-  "name": "SEATS",
-  "outputs": [
-   {
-    "internalType": "uint8",
-    "name": "",
-    "type": "uint8"
-   }
-  ],
-  "stateMutability": "view",
-  "type": "function"
- },
- {
-  "inputs": [
-   {
-    "internalType": "uint256",
-    "name": "tableId",
-    "type": "uint256"
-   },
-   {
-    "internalType": "uint32",
-    "name": "move",
-    "type": "uint32"
-   },
-   {
-    "internalType": "uint8",
-    "name": "quantity",
-    "type": "uint8"
-   },
-   {
-    "internalType": "uint8",
-    "name": "face",
-    "type": "uint8"
-   }
-  ],
-  "name": "bidDigest",
-  "outputs": [
-   {
-    "internalType": "bytes32",
-    "name": "",
-    "type": "bytes32"
-   }
-  ],
-  "stateMutability": "view",
-  "type": "function"
- },
- {
-  "inputs": [
-   {
-    "internalType": "uint256",
-    "name": "tableId",
-    "type": "uint256"
-   }
-  ],
-  "name": "challenge",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
- },
- {
-  "inputs": [
-   {
-    "internalType": "uint256",
-    "name": "tableId",
-    "type": "uint256"
-   },
-   {
-    "internalType": "bytes",
-    "name": "signature",
-    "type": "bytes"
-   }
-  ],
-  "name": "challengeBySig",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
- },
- {
-  "inputs": [
-   {
-    "internalType": "uint256",
-    "name": "tableId",
-    "type": "uint256"
-   },
-   {
-    "internalType": "uint32",
-    "name": "move",
-    "type": "uint32"
-   }
-  ],
-  "name": "challengeDigest",
-  "outputs": [
-   {
-    "internalType": "bytes32",
-    "name": "",
-    "type": "bytes32"
-   }
-  ],
-  "stateMutability": "view",
-  "type": "function"
- },
- {
-  "inputs": [
-   {
-    "internalType": "uint256",
-    "name": "tableId",
-    "type": "uint256"
-   }
-  ],
-  "name": "claimTimeout",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
- },
- {
-  "inputs": [],
-  "name": "confidentialProtocolId",
-  "outputs": [
-   {
-    "internalType": "uint256",
-    "name": "",
-    "type": "uint256"
-   }
-  ],
-  "stateMutability": "view",
-  "type": "function"
- },
- {
-  "inputs": [
-   {
-    "internalType": "uint256",
-    "name": "tableId",
-    "type": "uint256"
-   },
-   {
-    "internalType": "uint8",
-    "name": "round",
-    "type": "uint8"
-   },
-   {
-    "internalType": "uint8",
-    "name": "seat",
-    "type": "uint8"
-   }
-  ],
-  "name": "cupOf",
-  "outputs": [
-   {
-    "internalType": "euint8[5]",
-    "name": "",
-    "type": "bytes32[5]"
-   }
-  ],
-  "stateMutability": "view",
-  "type": "function"
- },
- {
-  "inputs": [],
-  "name": "eip712Domain",
-  "outputs": [
-   {
-    "internalType": "bytes1",
-    "name": "fields",
-    "type": "bytes1"
-   },
-   {
-    "internalType": "string",
-    "name": "name",
-    "type": "string"
-   },
-   {
-    "internalType": "string",
-    "name": "version",
-    "type": "string"
-   },
-   {
-    "internalType": "uint256",
-    "name": "chainId",
-    "type": "uint256"
-   },
-   {
-    "internalType": "address",
-    "name": "verifyingContract",
-    "type": "address"
-   },
-   {
-    "internalType": "bytes32",
-    "name": "salt",
-    "type": "bytes32"
-   },
-   {
-    "internalType": "uint256[]",
-    "name": "extensions",
-    "type": "uint256[]"
-   }
-  ],
-  "stateMutability": "view",
-  "type": "function"
- },
- {
-  "inputs": [
-   {
-    "internalType": "uint256",
-    "name": "tableId",
-    "type": "uint256"
-   }
-  ],
-  "name": "joinDigest",
-  "outputs": [
-   {
-    "internalType": "bytes32",
-    "name": "",
-    "type": "bytes32"
-   }
-  ],
-  "stateMutability": "view",
-  "type": "function"
- },
- {
-  "inputs": [
-   {
-    "internalType": "uint256",
-    "name": "tableId",
-    "type": "uint256"
-   }
-  ],
-  "name": "joinTable",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
- },
- {
-  "inputs": [
-   {
-    "internalType": "uint256",
-    "name": "tableId",
-    "type": "uint256"
-   },
-   {
-    "internalType": "bytes",
-    "name": "signature",
-    "type": "bytes"
-   }
-  ],
-  "name": "joinTableBySig",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
- },
- {
-  "inputs": [],
-  "name": "openTable",
-  "outputs": [
-   {
-    "internalType": "uint256",
-    "name": "tableId",
-    "type": "uint256"
-   }
-  ],
-  "stateMutability": "nonpayable",
-  "type": "function"
- },
- {
-  "inputs": [
-   {
-    "internalType": "uint256",
-    "name": "tableId",
-    "type": "uint256"
-   },
-   {
-    "internalType": "uint8",
-    "name": "quantity",
-    "type": "uint8"
-   },
-   {
-    "internalType": "uint8",
-    "name": "face",
-    "type": "uint8"
-   }
-  ],
-  "name": "placeBid",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
- },
- {
-  "inputs": [
-   {
-    "internalType": "uint256",
-    "name": "tableId",
-    "type": "uint256"
-   },
-   {
-    "internalType": "uint8",
-    "name": "quantity",
-    "type": "uint8"
-   },
-   {
-    "internalType": "uint8",
-    "name": "face",
-    "type": "uint8"
-   },
-   {
-    "internalType": "bytes",
-    "name": "signature",
-    "type": "bytes"
-   }
-  ],
-  "name": "placeBidBySig",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
- },
- {
-  "inputs": [
-   {
-    "internalType": "uint256",
-    "name": "tableId",
-    "type": "uint256"
-   },
-   {
-    "internalType": "bool",
-    "name": "bidHeld",
-    "type": "bool"
-   },
-   {
-    "internalType": "bytes",
-    "name": "decryptionProof",
-    "type": "bytes"
-   }
-  ],
-  "name": "resolve",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
- },
- {
-  "inputs": [],
-  "name": "tableCount",
-  "outputs": [
-   {
-    "internalType": "uint256",
-    "name": "",
-    "type": "uint256"
-   }
-  ],
-  "stateMutability": "view",
-  "type": "function"
- },
- {
-  "inputs": [
-   {
-    "internalType": "uint256",
-    "name": "tableId",
-    "type": "uint256"
-   }
-  ],
-  "name": "tableOf",
-  "outputs": [
-   {
-    "components": [
-     {
-      "internalType": "address[2]",
-      "name": "players",
-      "type": "address[2]"
-     },
-     {
-      "internalType": "enum BlindCup.Phase",
-      "name": "phase",
-      "type": "uint8"
-     },
-     {
-      "internalType": "uint8",
-      "name": "round",
-      "type": "uint8"
-     },
-     {
-      "internalType": "uint8",
-      "name": "turn",
-      "type": "uint8"
-     },
-     {
-      "internalType": "uint8[2]",
-      "name": "wins",
-      "type": "uint8[2]"
-     },
-     {
-      "internalType": "uint32",
-      "name": "moves",
-      "type": "uint32"
-     },
-     {
-      "internalType": "uint8",
-      "name": "bidQuantity",
-      "type": "uint8"
-     },
-     {
-      "internalType": "uint8",
-      "name": "bidFace",
-      "type": "uint8"
-     },
-     {
-      "internalType": "address",
-      "name": "bidder",
-      "type": "address"
-     },
-     {
-      "internalType": "uint64",
-      "name": "deadline",
-      "type": "uint64"
-     },
-     {
-      "internalType": "bytes32",
-      "name": "verdictHandle",
-      "type": "bytes32"
-     },
-     {
-      "internalType": "address",
-      "name": "winner",
-      "type": "address"
-     }
+  {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "BadBid",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ECDSAInvalidSignature",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "length",
+        "type": "uint256"
+      }
     ],
-    "internalType": "struct BlindCup.TableView",
-    "name": "v",
-    "type": "tuple"
-   }
-  ],
-  "stateMutability": "view",
-  "type": "function"
- }
+    "name": "ECDSAInvalidSignatureLength",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "s",
+        "type": "bytes32"
+      }
+    ],
+    "name": "ECDSAInvalidSignatureS",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidKMSSignatures",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidShortString",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NoBidToChallenge",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotBidding",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotOpen",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotRevealing",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotYourTurn",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SeatTaken",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "str",
+        "type": "string"
+      }
+    ],
+    "name": "StringTooLong",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "TooEarly",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ZamaProtocolUnsupported",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tableId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "round",
+        "type": "uint8"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "bidder",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "quantity",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "face",
+        "type": "uint8"
+      }
+    ],
+    "name": "BidPlaced",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tableId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "round",
+        "type": "uint8"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "challenger",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "verdictHandle",
+        "type": "bytes32"
+      }
+    ],
+    "name": "Challenged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tableId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "round",
+        "type": "uint8"
+      }
+    ],
+    "name": "CupsRolled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [],
+    "name": "EIP712DomainChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tableId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "winner",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "byForfeit",
+        "type": "bool"
+      }
+    ],
+    "name": "MatchWon",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tableId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "guest",
+        "type": "address"
+      }
+    ],
+    "name": "PlayerJoined",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bytes32[]",
+        "name": "handlesList",
+        "type": "bytes32[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "abiEncodedCleartexts",
+        "type": "bytes"
+      }
+    ],
+    "name": "PublicDecryptionVerified",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tableId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "round",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "bidHeld",
+        "type": "bool"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "roundWinner",
+        "type": "address"
+      }
+    ],
+    "name": "RoundResolved",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tableId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "host",
+        "type": "address"
+      }
+    ],
+    "name": "TableOpened",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "BID_TYPEHASH",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "CHALLENGE_TYPEHASH",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "DICE",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "FACES",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "JOIN_TYPEHASH",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MOVE_TIMEOUT",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "ROUNDS_TO_WIN",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "SEATS",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tableId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint32",
+        "name": "move",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint8",
+        "name": "quantity",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "face",
+        "type": "uint8"
+      }
+    ],
+    "name": "bidDigest",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tableId",
+        "type": "uint256"
+      }
+    ],
+    "name": "challenge",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tableId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "signature",
+        "type": "bytes"
+      }
+    ],
+    "name": "challengeBySig",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tableId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint32",
+        "name": "move",
+        "type": "uint32"
+      }
+    ],
+    "name": "challengeDigest",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tableId",
+        "type": "uint256"
+      }
+    ],
+    "name": "claimTimeout",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "confidentialProtocolId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tableId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint8",
+        "name": "round",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "seat",
+        "type": "uint8"
+      }
+    ],
+    "name": "cupOf",
+    "outputs": [
+      {
+        "internalType": "euint8[5]",
+        "name": "",
+        "type": "bytes32[5]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "eip712Domain",
+    "outputs": [
+      {
+        "internalType": "bytes1",
+        "name": "fields",
+        "type": "bytes1"
+      },
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "version",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "chainId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "verifyingContract",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "salt",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "extensions",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tableId",
+        "type": "uint256"
+      }
+    ],
+    "name": "joinDigest",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tableId",
+        "type": "uint256"
+      }
+    ],
+    "name": "joinTable",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tableId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "signature",
+        "type": "bytes"
+      }
+    ],
+    "name": "joinTableBySig",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "openTable",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "tableId",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tableId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint8",
+        "name": "quantity",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "face",
+        "type": "uint8"
+      }
+    ],
+    "name": "placeBid",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tableId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint8",
+        "name": "quantity",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "face",
+        "type": "uint8"
+      },
+      {
+        "internalType": "bytes",
+        "name": "signature",
+        "type": "bytes"
+      }
+    ],
+    "name": "placeBidBySig",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tableId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "bidHeld",
+        "type": "bool"
+      },
+      {
+        "internalType": "bytes",
+        "name": "decryptionProof",
+        "type": "bytes"
+      }
+    ],
+    "name": "resolve",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "tableCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tableId",
+        "type": "uint256"
+      }
+    ],
+    "name": "tableOf",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address[2]",
+            "name": "players",
+            "type": "address[2]"
+          },
+          {
+            "internalType": "enum BlindCup.Phase",
+            "name": "phase",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "round",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "turn",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8[2]",
+            "name": "wins",
+            "type": "uint8[2]"
+          },
+          {
+            "internalType": "uint32",
+            "name": "moves",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint8",
+            "name": "bidQuantity",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint8",
+            "name": "bidFace",
+            "type": "uint8"
+          },
+          {
+            "internalType": "address",
+            "name": "bidder",
+            "type": "address"
+          },
+          {
+            "internalType": "uint64",
+            "name": "deadline",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "verdictHandle",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "winner",
+            "type": "address"
+          }
+        ],
+        "internalType": "struct BlindCup.TableView",
+        "name": "v",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
 ]

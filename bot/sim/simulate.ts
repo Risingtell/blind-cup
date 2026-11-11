@@ -18,10 +18,22 @@ export type Report = {
   lieWhenNotTapped: number;
 };
 
-export function simulate(rounds: number, callTaps: boolean, seed = 1, wren: Persona = WREN, opponent: Persona = TRUSTING): Report {
+export function simulate(
+  rounds: number,
+  callTaps: boolean,
+  seed = 1,
+  wren: Persona = WREN,
+  opponent: Persona = TRUSTING,
+): Report {
   const rng = seeded(seed);
   const roll = () => Array.from({ length: DICE }, () => Math.floor(rng() * FACES));
-  let oppWins = 0, bids = 0, bluffs = 0, tapped = 0, tappedLies = 0, plain = 0, plainLies = 0;
+  let oppWins = 0,
+    bids = 0,
+    bluffs = 0,
+    tapped = 0,
+    tappedLies = 0,
+    plain = 0,
+    plainLies = 0;
 
   for (let i = 0; i < rounds; i++) {
     const wrenCup = roll();
@@ -43,8 +55,13 @@ export function simulate(rounds: number, callTaps: boolean, seed = 1, wren: Pers
         const lie = !holds(standing);
         bids++;
         if (d.bluff) bluffs++;
-        if (tell) (tapped++, (tappedLies += +lie));
-        else (plain++, (plainLies += +lie));
+        if (tell) {
+          tapped++;
+          tappedLies += +lie;
+        } else {
+          plain++;
+          plainLies += +lie;
+        }
       } else {
         if (callTaps && tell) {
           oppWon = !holds(standing!);
@@ -78,6 +95,10 @@ if (require.main === module) {
   const reads = simulate(n, true);
   console.log(`${n} rounds each, against a player who never bluffs and believes most bids`);
   console.log(`Wren bluffs on ${pct(ignores.bluffRate)} of her bids`);
-  console.log(`when she taps her cup her bid is a lie ${pct(ignores.lieWhenTapped)} of the time; otherwise ${pct(ignores.lieWhenNotTapped)}`);
-  console.log(`that player wins ${pct(ignores.opponentWinRate)} of rounds ignoring her hands, ${pct(reads.opponentWinRate)} calling every tap`);
+  console.log(
+    `when she taps her cup her bid is a lie ${pct(ignores.lieWhenTapped)} of the time; otherwise ${pct(ignores.lieWhenNotTapped)}`,
+  );
+  console.log(
+    `that player wins ${pct(ignores.opponentWinRate)} of rounds ignoring her hands, ${pct(reads.opponentWinRate)} calling every tap`,
+  );
 }

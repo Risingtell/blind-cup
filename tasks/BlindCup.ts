@@ -20,8 +20,10 @@ async function retry<T>(label: string, fn: () => Promise<T>, tries = 24, waitMs 
   }
 }
 
-const message = (e: unknown) => (e instanceof Error ? `${e.message} ${(e as { code?: string }).code ?? ""}` : String(e));
-const isNetworkError = (e: unknown) => /timeout|timed out|ETIMEDOUT|ECONNRESET|UND_ERR|socket hang up|fetch failed|502|503|504/i.test(message(e));
+const message = (e: unknown) =>
+  e instanceof Error ? `${e.message} ${(e as { code?: string }).code ?? ""}` : String(e);
+const isNetworkError = (e: unknown) =>
+  /timeout|timed out|ETIMEDOUT|ECONNRESET|UND_ERR|socket hang up|fetch failed|502|503|504/i.test(message(e));
 
 /**
  * Sends a transaction, riding out a flaky public RPC:
@@ -114,7 +116,13 @@ async function readCups(
     });
     const dice: number[] = [];
     for (const h of handles) {
-      dice.push(Number(await retry(`seat ${seat} reading own die`, () => hre.fhevm.userDecryptEuint(FhevmType.euint8, h, at, player))));
+      dice.push(
+        Number(
+          await retry(`seat ${seat} reading own die`, () =>
+            hre.fhevm.userDecryptEuint(FhevmType.euint8, h, at, player),
+          ),
+        ),
+      );
     }
     cups.push(dice);
   }
@@ -122,7 +130,13 @@ async function readCups(
 }
 
 /** Public-decrypts the sealed verdict through the Zama relayer and settles with the KMS proof. Anyone may do this. */
-async function settle(hre: HardhatRuntimeEnvironment, cup: Cup, tableId: bigint, verdictHandle: string, caller: HardhatEthersSigner) {
+async function settle(
+  hre: HardhatRuntimeEnvironment,
+  cup: Cup,
+  tableId: bigint,
+  verdictHandle: string,
+  caller: HardhatEthersSigner,
+) {
   const result = await retry("verdict decryption", () => hre.fhevm.publicDecrypt([verdictHandle]));
   const bidHeld = result.clearValues[verdictHandle as `0x${string}`] as boolean;
   const receipt = await send(async () => cup.connect(caller).resolve(tableId, bidHeld, result.decryptionProof, FEES));
@@ -153,7 +167,12 @@ task("blindcup:round", "Play one full Blind Cup round on the live network")
     const [host, guest] = await ethers.getSigners();
     const name = args.bot ? "bot" : "guest";
     console.log(`BlindCup ${at}\nhost  ${host.address}\n${name.padEnd(5)} ${guest.address}`);
-    const domain = { name: "BlindCup", version: "1", chainId: (await ethers.provider.getNetwork()).chainId, verifyingContract: at };
+    const domain = {
+      name: "BlindCup",
+      version: "1",
+      chainId: (await ethers.provider.getNetwork()).chainId,
+      verifyingContract: at,
+    };
     const botNonce = await ethers.provider.getTransactionCount(guest.address);
 
     const guestBalance = await ethers.provider.getBalance(guest.address);
@@ -204,7 +223,9 @@ task("blindcup:round", "Play one full Blind Cup round on the live network")
           { name: "move", type: "uint32" },
         ],
       };
-      chal = await send(async () => cup.connect(host).challengeBySig(tableId, await guest.signTypedData(domain, types, { tableId, move }), FEES));
+      chal = await send(async () =>
+        cup.connect(host).challengeBySig(tableId, await guest.signTypedData(domain, types, { tableId, move }), FEES),
+      );
     } else {
       chal = await send(async () => cup.connect(guest).challenge(tableId, FEES));
     }
@@ -215,15 +236,21 @@ task("blindcup:round", "Play one full Blind Cup round on the live network")
 
     const s = await settle(hre, cup, tableId, verdictHandle, host);
     console.log(`7. KMS verdict: bid ${s.bidHeld ? "HELD" : "was a LIE"}; proof checked onchain: ${TX(s.hash)}`);
-    console.log(`   round 1 winner: ${s.winner === host.address ? "host" : name} (${s.winner}); round 2 cups rolled in that same tx`);
+    console.log(
+      `   round 1 winner: ${s.winner === host.address ? "host" : name} (${s.winner}); round 2 cups rolled in that same tx`,
+    );
 
     const expected = countFor(cups[0], face) + countFor(cups[1], face) >= quantity;
     if (expected !== s.bidHeld) throw new Error(`MISMATCH: players' views imply ${expected}, chain said ${s.bidHeld}`);
-    console.log(`8. check: the players' own views imply "${expected ? "held" : "lie"}", matching the chain. Cups stay sealed.`);
+    console.log(
+      `8. check: the players' own views imply "${expected ? "held" : "lie"}", matching the chain. Cups stay sealed.`,
+    );
     if (args.bot) {
       const after = await ethers.provider.getTransactionCount(guest.address);
       if (after !== botNonce) throw new Error(`bot sent ${after - botNonce} transaction(s); it should send none`);
-      console.log(`9. check: the bot's wallet sent 0 transactions (nonce still ${after}); the host paid for every move.`);
+      console.log(
+        `9. check: the bot's wallet sent 0 transactions (nonce still ${after}); the host paid for every move.`,
+      );
     }
   });
 
@@ -241,13 +268,20 @@ task("blindcup:settle", "Settle a challenged table with the KMS-signed verdict")
     await useLowFees(hre);
     const { at, cup } = await contractAt(hre, args.address);
     const tableId = BigInt(args.table);
-    const t = await retry("table state", async () => {
-      const x = await cup.tableOf(tableId);
-      if (x.phase !== 2n || x.verdictHandle === ZERO) throw new Error(`table ${tableId} is not waiting for a verdict (phase ${x.phase})`);
-      return x;
-    }, 6);
+    const t = await retry(
+      "table state",
+      async () => {
+        const x = await cup.tableOf(tableId);
+        if (x.phase !== 2n || x.verdictHandle === ZERO)
+          throw new Error(`table ${tableId} is not waiting for a verdict (phase ${x.phase})`);
+        return x;
+      },
+      6,
+    );
     const signers = await hre.ethers.getSigners();
-    console.log(`table ${tableId}: bid "${t.bidQuantity} x ${show(Number(t.bidFace))}s", verdict handle ${t.verdictHandle}`);
+    console.log(
+      `table ${tableId}: bid "${t.bidQuantity} x ${show(Number(t.bidFace))}s", verdict handle ${t.verdictHandle}`,
+    );
 
     const s = await settle(hre, cup, tableId, t.verdictHandle, signers[0]);
     console.log(`KMS verdict: bid ${s.bidHeld ? "HELD" : "was a LIE"}; proof checked onchain: ${TX(s.hash)}`);
@@ -259,7 +293,8 @@ task("blindcup:settle", "Settle a challenged table with the KMS-signed verdict")
       const face = Number(t.bidFace);
       const expected = countFor(cups[0], face) + countFor(cups[1], face) >= Number(t.bidQuantity);
       console.log(`cups (each read by its owner): ${cups[0].map(show).join(" ")} | ${cups[1].map(show).join(" ")}`);
-      if (expected !== s.bidHeld) throw new Error(`MISMATCH: players' views imply ${expected}, chain said ${s.bidHeld}`);
+      if (expected !== s.bidHeld)
+        throw new Error(`MISMATCH: players' views imply ${expected}, chain said ${s.bidHeld}`);
       console.log(`check: the players' own views imply "${expected ? "held" : "lie"}", matching the chain.`);
     }
   });
@@ -291,10 +326,13 @@ task("blindcup:wren", "Play a full match against Wren, the signing bot, on the l
       cup,
       signer: wren,
       secret: await deriveSecret(wren),
-      readOwnCup: (handles: string[]) => retry(`${NAME} reading her own cup`, () => userDecryptDice(instance, wren, at, handles)),
+      readOwnCup: (handles: string[]) =>
+        retry(`${NAME} reading her own cup`, () => userDecryptDice(instance, wren, at, handles)),
     };
     const nonce = await ethers.provider.getTransactionCount(wren.address);
-    console.log(`BlindCup ${at}\nhost ${host.address} (balance ${ethers.formatEther(await ethers.provider.getBalance(host.address))} ETH)\n${NAME} ${wren.address}`);
+    console.log(
+      `BlindCup ${at}\nhost ${host.address} (balance ${ethers.formatEther(await ethers.provider.getBalance(host.address))} ETH)\n${NAME} ${wren.address}`,
+    );
 
     const open = await send(async () => cup.connect(host).openTable(FEES));
     const tableId = eventArgs(cup, open, "TableOpened").tableId as bigint;
@@ -314,7 +352,9 @@ task("blindcup:wren", "Play a full match against Wren, the signing bot, on the l
         const s = await settle(hre, cup, tableId, t.verdictHandle, host);
         block = s.block;
         const wrenWon = s.winner === wren.address;
-        console.log(`   counting... ${s.bidHeld ? "HELD" : "LIAR"}. round ${t.round} to ${wrenWon ? NAME : "host"}: ${TX(s.hash)}`);
+        console.log(
+          `   counting... ${s.bidHeld ? "HELD" : "LIAR"}. round ${t.round} to ${wrenWon ? NAME : "host"}: ${TX(s.hash)}`,
+        );
         console.log(`   ${NAME}: "${line(wrenWon ? "winRound" : "loseRound", rng)}"`);
         continue;
       }
@@ -322,7 +362,10 @@ task("blindcup:wren", "Play a full match against Wren, the signing bot, on the l
       if (!hostCups.has(t.round)) {
         const handles: string[] = await cup.cupOf(tableId, t.round, 0, { blockTag: block });
         const dice: number[] = [];
-        for (const h of handles) dice.push(Number(await retry("host reading own die", () => fhevm.userDecryptEuint(FhevmType.euint8, h, at, host))));
+        for (const h of handles)
+          dice.push(
+            Number(await retry("host reading own die", () => fhevm.userDecryptEuint(FhevmType.euint8, h, at, host))),
+          );
         hostCups.set(t.round, dice);
         console.log(`\nround ${t.round}: host's cup ${dice.map(show).join(" ")} (${NAME}'s stays sealed)`);
       }
@@ -353,13 +396,19 @@ task("blindcup:wren", "Play a full match against Wren, the signing bot, on the l
       block = receipt!.blockNumber;
     }
 
-    const done = await retry("final state", async () => {
-      const x = await cup.tableOf(tableId, { blockTag: block });
-      if (x.phase !== 3n) throw new Error("not done yet");
-      return x;
-    }, 6);
+    const done = await retry(
+      "final state",
+      async () => {
+        const x = await cup.tableOf(tableId, { blockTag: block });
+        if (x.phase !== 3n) throw new Error("not done yet");
+        return x;
+      },
+      6,
+    );
     const wrenWon = done.winner === wren.address;
-    console.log(`\nmatch to ${wrenWon ? NAME : "host"} (${done.wins[0]}-${done.wins[1]}). ${NAME}: "${line(wrenWon ? "winMatch" : "loseMatch", rng)}"`);
+    console.log(
+      `\nmatch to ${wrenWon ? NAME : "host"} (${done.wins[0]}-${done.wins[1]}). ${NAME}: "${line(wrenWon ? "winMatch" : "loseMatch", rng)}"`,
+    );
     const after = await ethers.provider.getTransactionCount(wren.address);
     if (after !== nonce) throw new Error(`${NAME} sent ${after - nonce} transaction(s); she should send none`);
     console.log(`check: ${NAME}'s wallet sent 0 transactions (nonce still ${after}); the host paid for every move.`);

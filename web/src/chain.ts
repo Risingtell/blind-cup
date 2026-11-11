@@ -2,7 +2,15 @@
  * Chain access. Reads go to a public RPC pinned to the block of our last transaction (load-balanced nodes
  * lag); writes go through the player's own wallet with a low tip, so a whole match costs pennies of test ETH.
  */
-import { BrowserProvider, Contract, type ContractTransactionReceipt, type Eip1193Provider, JsonRpcProvider, parseUnits, type Signer } from "ethers";
+import {
+  BrowserProvider,
+  Contract,
+  type ContractTransactionReceipt,
+  type Eip1193Provider,
+  JsonRpcProvider,
+  parseUnits,
+  type Signer,
+} from "ethers";
 
 import ABI from "../../bot/BlindCup.abi.json";
 import { BLINDCUP, CHAIN_HEX, CHAIN_ID, READ_RPC, TIP_GWEI } from "./config";
@@ -114,7 +122,15 @@ export class Wallet {
       if ((e as { code?: number }).code !== 4902) throw e;
       await window.ethereum.request({
         method: "wallet_addEthereumChain",
-        params: [{ chainId: CHAIN_HEX, chainName: "Sepolia", nativeCurrency: { name: "Sepolia ETH", symbol: "ETH", decimals: 18 }, rpcUrls: [READ_RPC], blockExplorerUrls: ["https://sepolia.etherscan.io"] }],
+        params: [
+          {
+            chainId: CHAIN_HEX,
+            chainName: "Sepolia",
+            nativeCurrency: { name: "Sepolia ETH", symbol: "ETH", decimals: 18 },
+            rpcUrls: [READ_RPC],
+            blockExplorerUrls: ["https://sepolia.etherscan.io"],
+          },
+        ],
       });
     }
     const provider = new BrowserProvider(window.ethereum, CHAIN_ID);
@@ -131,7 +147,10 @@ export class Wallet {
     const cup = new Contract(BLINDCUP, ABI, this.signer);
     const base = (await reader.getBlock("latest"))?.baseFeePerGas ?? 0n;
     const tip = parseUnits(TIP_GWEI, "gwei");
-    const tx = await cup.getFunction(method)(...args, { maxPriorityFeePerGas: tip, maxFeePerGas: base * 4n + tip * 2n });
+    const tx = await cup.getFunction(method)(...args, {
+      maxPriorityFeePerGas: tip,
+      maxFeePerGas: base * 4n + tip * 2n,
+    });
     const receipt = (await tx.wait()) as ContractTransactionReceipt | null;
     if (!receipt || receipt.status !== 1) throw new Error(`${method} failed on chain`);
     return receipt;

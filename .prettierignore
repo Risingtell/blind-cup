@@ -2,6 +2,8 @@
 fhevmTemp
 
 # directories
+web/node_modules
+web/dist
 .coverage_artifacts
 .coverage_cache
 .coverage_contracts

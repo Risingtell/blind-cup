@@ -24,7 +24,8 @@ describe("Wren (the bot's mind)", function () {
     for (let i = 0; i < 5000; i++) {
       const { dice, standing } = randomPosition(rng);
       const d = decide(dice, standing, rng);
-      if (d.kind === "challenge" ? standing === null : !isRaise(standing, d)) bad.push(`${dice} vs ${JSON.stringify(standing)}: ${JSON.stringify(d)}`);
+      if (d.kind === "challenge" ? standing === null : !isRaise(standing, d))
+        bad.push(`${dice} vs ${JSON.stringify(standing)}: ${JSON.stringify(d)}`);
     }
     expect(bad).to.deep.equal([]);
   });
@@ -35,7 +36,11 @@ describe("Wren (the bot's mind)", function () {
     for (let i = 0; i < 2000; i++) {
       const dice = Array.from({ length: DICE }, () => Math.floor(rng() * FACES));
       const d = decide(dice, null, rng);
-      const ok = d.kind === "bid" && d.face === bestFace(dice) && !d.bluff && [1, 2].includes(d.quantity - countFor(dice, d.face));
+      const ok =
+        d.kind === "bid" &&
+        d.face === bestFace(dice) &&
+        !d.bluff &&
+        [1, 2].includes(d.quantity - countFor(dice, d.face));
       if (!ok) bad.push(`${dice}: ${JSON.stringify(d)}`);
     }
     expect(bad).to.deep.equal([]);
@@ -48,8 +53,10 @@ describe("Wren (the bot's mind)", function () {
       const dice = Array.from({ length: DICE }, () => Math.floor(rng() * FACES));
       const face = Math.floor(rng() * FACES);
       const mine = countFor(dice, face);
-      if (mine > 0 && decide(dice, { quantity: mine, face }, rng).kind !== "bid") bad.push(`called a proven ${mine}x${face} holding ${dice}`);
-      if (mine + DICE < TOTAL && decide(dice, { quantity: mine + DICE + 1, face }, rng).kind !== "challenge") bad.push(`let an impossible bid stand holding ${dice}`);
+      if (mine > 0 && decide(dice, { quantity: mine, face }, rng).kind !== "bid")
+        bad.push(`called a proven ${mine}x${face} holding ${dice}`);
+      if (mine + DICE < TOTAL && decide(dice, { quantity: mine + DICE + 1, face }, rng).kind !== "challenge")
+        bad.push(`let an impossible bid stand holding ${dice}`);
     }
     expect(bad).to.deep.equal([]);
   });
@@ -60,7 +67,8 @@ describe("Wren (the bot's mind)", function () {
     for (let i = 0; i < 500; i++) {
       const { dice, standing } = randomPosition(rng);
       const seed = Math.floor(rng() * 2 ** 32);
-      if (JSON.stringify(decide(dice, standing, seeded(seed))) !== JSON.stringify(decide(dice, standing, seeded(seed)))) bad.push(`${dice} seed ${seed}`);
+      if (JSON.stringify(decide(dice, standing, seeded(seed))) !== JSON.stringify(decide(dice, standing, seeded(seed))))
+        bad.push(`${dice} seed ${seed}`);
     }
     expect(bad).to.deep.equal([]);
   });
@@ -183,12 +191,14 @@ describe("Wren at the table (mock chain)", function () {
     if (m.play.kind === "challenge") await (await cup.connect(host).challengeBySig(tableId, m.signature)).wait();
     else await (await cup.connect(host).placeBidBySig(tableId, m.play.quantity, m.play.face, m.signature)).wait();
     if (m.play.kind === "bid") {
-      await expect(cup.connect(host).placeBidBySig(tableId, m.play.quantity, m.play.face, m.signature)).to.be.revertedWithCustomError(
-        cup,
-        "NotYourTurn",
-      );
+      await expect(
+        cup.connect(host).placeBidBySig(tableId, m.play.quantity, m.play.face, m.signature),
+      ).to.be.revertedWithCustomError(cup, "NotYourTurn");
     } else {
-      await expect(cup.connect(host).challengeBySig(tableId, m.signature)).to.be.revertedWithCustomError(cup, "NotBidding");
+      await expect(cup.connect(host).challengeBySig(tableId, m.signature)).to.be.revertedWithCustomError(
+        cup,
+        "NotBidding",
+      );
     }
   });
 });

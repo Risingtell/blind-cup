@@ -14,7 +14,8 @@ let match: Match | null = null;
 let qty = 1;
 let face = 1;
 
-for (const a of [$("faucet"), ...document.querySelectorAll<HTMLAnchorElement>(".faucet-link")]) (a as HTMLAnchorElement).href = FAUCET;
+for (const a of [$("faucet"), ...document.querySelectorAll<HTMLAnchorElement>(".faucet-link")])
+  (a as HTMLAnchorElement).href = FAUCET;
 const contractLink = $<HTMLAnchorElement>("contract-link");
 contractLink.href = addressUrl(BLINDCUP);
 contractLink.textContent = `${BLINDCUP.slice(0, 6)}…${BLINDCUP.slice(-4)}`;
@@ -162,6 +163,8 @@ function paint(v: View) {
     retry.onclick = () => void v.retry!.run();
   }
 
-  $("tx").innerHTML = v.lastTx ? `Last transaction: <a href="${txUrl(v.lastTx)}" target="_blank" rel="noopener">${v.lastTx.slice(0, 10)}…</a>` : "";
+  $("tx").innerHTML = v.lastTx
+    ? `Last transaction: <a href="${txUrl(v.lastTx)}" target="_blank" rel="noopener">${v.lastTx.slice(0, 10)}…</a>`
+    : "";
   if (t?.phase === Phase.Done) void checkBalance();
 }

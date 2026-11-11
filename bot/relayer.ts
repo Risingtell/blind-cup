@@ -20,7 +20,12 @@ export function sepoliaInstance(rpcUrl: string): Promise<FhevmInstance> {
 }
 
 /** Decrypts handles the signer is allowed to read, in the order given. Values are faces 0..5. */
-export async function userDecryptDice(instance: FhevmInstance, signer: Signer, contractAddress: string, handles: string[]): Promise<number[]> {
+export async function userDecryptDice(
+  instance: FhevmInstance,
+  signer: Signer,
+  contractAddress: string,
+  handles: string[],
+): Promise<number[]> {
   const { publicKey, privateKey } = instance.generateKeypair();
   const start = Math.floor(Date.now() / 1000); // a validity window for the request, not a stored time
   const days = 1;

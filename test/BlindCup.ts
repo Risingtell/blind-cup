@@ -73,7 +73,11 @@ describe("BlindCup", function () {
     await settle(tableId);
   }
 
-  async function sign(signer: HardhatEthersSigner, primaryType: "Join" | "Bid" | "Challenge", value: Record<string, unknown>) {
+  async function sign(
+    signer: HardhatEthersSigner,
+    primaryType: "Join" | "Bid" | "Challenge",
+    value: Record<string, unknown>,
+  ) {
     const domain = {
       name: "BlindCup",
       version: "1",
@@ -220,23 +224,41 @@ describe("BlindCup", function () {
 
     // replaying a signature once the state has moved on recovers no seated player
     await (await cup.connect(host).placeBid(tableId, 4, 2)).wait();
-    await expect(cup.connect(host).placeBidBySig(tableId, 3, 2, bidSig)).to.be.revertedWithCustomError(cup, "NotYourTurn");
+    await expect(cup.connect(host).placeBidBySig(tableId, 3, 2, bidSig)).to.be.revertedWithCustomError(
+      cup,
+      "NotYourTurn",
+    );
     // a stranger cannot move for the bot
     t = await cup.tableOf(tableId);
     const forged = await sign(stranger, "Challenge", { tableId, move: t.moves });
     await expect(cup.connect(host).challengeBySig(tableId, forged)).to.be.revertedWithCustomError(cup, "NotYourTurn");
     // a signature over one bid does not authorise a different one
     const other = await sign(bot, "Bid", { tableId, move: t.moves, quantity: 5, face: 2 });
-    await expect(cup.connect(host).placeBidBySig(tableId, 6, 2, other)).to.be.revertedWithCustomError(cup, "NotYourTurn");
+    await expect(cup.connect(host).placeBidBySig(tableId, 6, 2, other)).to.be.revertedWithCustomError(
+      cup,
+      "NotYourTurn",
+    );
     // the contract's digest helper agrees with what the bot signs
     const expected = ethers.TypedDataEncoder.hash(
-      { name: "BlindCup", version: "1", chainId: (await ethers.provider.getNetwork()).chainId, verifyingContract: cupAddress },
-      { Challenge: [{ name: "tableId", type: "uint256" }, { name: "move", type: "uint32" }] },
+      {
+        name: "BlindCup",
+        version: "1",
+        chainId: (await ethers.provider.getNetwork()).chainId,
+        verifyingContract: cupAddress,
+      },
+      {
+        Challenge: [
+          { name: "tableId", type: "uint256" },
+          { name: "move", type: "uint32" },
+        ],
+      },
       { tableId, move: t.moves },
     );
     expect(await cup.challengeDigest(tableId, t.moves)).to.eq(expected);
 
-    await (await cup.connect(host).challengeBySig(tableId, await sign(bot, "Challenge", { tableId, move: t.moves }))).wait();
+    await (
+      await cup.connect(host).challengeBySig(tableId, await sign(bot, "Challenge", { tableId, move: t.moves }))
+    ).wait();
     expect((await cup.tableOf(tableId)).phase).to.eq(Phase.Revealing);
     await settle(tableId, host);
 

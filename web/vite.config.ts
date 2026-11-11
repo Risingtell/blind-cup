@@ -12,7 +12,7 @@ function wrenDev(): Plugin {
     name: "wren-dev",
     configureServer(server) {
       const vars = join(process.env.APPDATA ?? "", "hardhat-nodejs", "Config", "vars.json");
-      const stored = existsSync(vars) ? JSON.parse(readFileSync(vars, "utf8")).vars ?? {} : {};
+      const stored = existsSync(vars) ? (JSON.parse(readFileSync(vars, "utf8")).vars ?? {}) : {};
       process.env.WREN_PRIVATE_KEY ??= stored.WREN_PRIVATE_KEY?.value;
       // A throwaway test player for ?devwallet, served only by this dev server and only to localhost.
       server.middlewares.use("/api/dev-wallet", (req, res) => {

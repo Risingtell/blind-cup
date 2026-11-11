@@ -11,7 +11,11 @@ import { vars } from "hardhat/config";
 async function main() {
   const at = (await deployments.get("BlindCup")).address;
   // Wren is account 1 of the test mnemonic. The key stays in this process and is never printed.
-  process.env.WREN_PRIVATE_KEY = HDNodeWallet.fromPhrase(vars.get("MNEMONIC"), undefined, "m/44'/60'/0'/0/1").privateKey;
+  process.env.WREN_PRIVATE_KEY = HDNodeWallet.fromPhrase(
+    vars.get("MNEMONIC"),
+    undefined,
+    "m/44'/60'/0'/0/1",
+  ).privateKey;
   process.env.BLINDCUP_ADDRESS = at;
   process.env.SEPOLIA_RPC_URL = (network.config as { url: string }).url;
   const { GET, POST } = await import("../api/wren");
@@ -54,7 +58,9 @@ async function main() {
       : await cup.connect(host).placeBidBySig(tableId, m.play.quantity, m.play.face, m.signature, fees);
   const r = await tx.wait();
   console.log(`  relayed her ${m.play.kind}: https://sepolia.etherscan.io/tx/${r!.hash}`);
-  console.log("smoke test passed: the endpoint joins, refuses bad input and out-of-turn asks, and signs moves that the chain accepts");
+  console.log(
+    "smoke test passed: the endpoint joins, refuses bad input and out-of-turn asks, and signs moves that the chain accepts",
+  );
 }
 
 main().catch((e) => {

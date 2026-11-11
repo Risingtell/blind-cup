@@ -11,7 +11,10 @@ export type WrenMove = {
 
 async function call<T>(body?: object): Promise<T> {
   for (let i = 1; ; i++) {
-    const r = await fetch("/api/wren", body ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : {});
+    const r = await fetch(
+      "/api/wren",
+      body ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : {},
+    );
     const j = await r.json().catch(() => ({ error: `Wren's seat answered ${r.status}` }));
     if (r.ok) return j as T;
     // 409: her node hasn't seen our last block yet; 503: a hiccup. Both clear up in a moment.
@@ -25,5 +28,7 @@ async function call<T>(body?: object): Promise<T> {
 
 let card: Promise<WrenCard> | undefined;
 export const wrenCard = () => (card ??= call<WrenCard>());
-export const wrenJoin = (tableId: bigint, block: number) => call<{ signature: string }>({ tableId: tableId.toString(), action: "join", block });
-export const wrenMove = (tableId: bigint, block: number) => call<WrenMove>({ tableId: tableId.toString(), action: "move", block });
+export const wrenJoin = (tableId: bigint, block: number) =>
+  call<{ signature: string }>({ tableId: tableId.toString(), action: "join", block });
+export const wrenMove = (tableId: bigint, block: number) =>
+  call<WrenMove>({ tableId: tableId.toString(), action: "move", block });

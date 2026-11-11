@@ -64,7 +64,12 @@ async function domainOf(ctx: BotContext) {
 
 /** Deterministic per position: same secret, chain, contract, table and move number give the same stream. */
 export function rngFor(secret: string, chainId: bigint, at: string, tableId: bigint, move: number) {
-  const h = keccak256(AbiCoder.defaultAbiCoder().encode(["bytes32", "uint256", "address", "uint256", "uint32"], [secret, chainId, at, tableId, move]));
+  const h = keccak256(
+    AbiCoder.defaultAbiCoder().encode(
+      ["bytes32", "uint256", "address", "uint256", "uint32"],
+      [secret, chainId, at, tableId, move],
+    ),
+  );
   return seeded(parseInt(h.slice(2, 10), 16));
 }
 
@@ -105,10 +110,16 @@ export async function nextMove(ctx: BotContext, tableId: bigint, blockTag?: numb
     signature = await ctx.signer.signTypedData(domain, CHALLENGE_TYPES, { tableId, move });
     moment = "challenge";
   } else {
-    signature = await ctx.signer.signTypedData(domain, BID_TYPES, { tableId, move, quantity: decision.quantity, face: decision.face });
+    signature = await ctx.signer.signTypedData(domain, BID_TYPES, {
+      tableId,
+      move,
+      quantity: decision.quantity,
+      face: decision.face,
+    });
     moment = standing ? "raise" : "open";
   }
-  const play: Play = decision.kind === "bid" ? { kind: "bid", quantity: decision.quantity, face: decision.face } : { kind: "challenge" };
+  const play: Play =
+    decision.kind === "bid" ? { kind: "bid", quantity: decision.quantity, face: decision.face } : { kind: "challenge" };
   const tell = decision.kind === "bid" && decision.tell;
   return { tableId, move, play, signature, says: line(moment, rng), tell };
 }
