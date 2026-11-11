@@ -1,0 +1,21 @@
+{
+  "name": "blind-cup-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@zama-fhe/relayer-sdk": "0.4.1",
+    "ethers": "6.16.0",
+    "phaser": "4.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "typescript": "5.8.3",
+    "vite": "7.3.8"
+  }
+}

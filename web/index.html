@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blind Cup</title>
+    <meta name="description" content="Liar's dice, rebuilt on Zama FHE. Your dice are rolled encrypted on chain, you see only your own, and the contract counts every die without seeing one." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='3' width='26' height='26' rx='4' fill='%23f1e9d6'/%3E%3Ccircle cx='10' cy='10' r='3' fill='%2315110d'/%3E%3Ccircle cx='22' cy='22' r='3' fill='%2315110d'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23e0a43a'/%3E%3C/svg%3E" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:ital,wght@0,400;0,600;0,800;1,400&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <header class="bar">
+      <div class="wrap bar-in">
+        <a class="mark" href="/">BLIND CUP</a>
+        <nav class="bar-nav">
+          <a href="#fair">How it's fair</a>
+          <a href="#why">Why FHE</a>
+          <button id="connect" class="btn btn-small">Connect wallet</button>
+        </nav>
+      </div>
+    </header>
+
+    <section class="band band-hero">
+      <div class="wrap">
+        <p class="eyebrow">Liar's dice, rebuilt on Zama FHE · Sepolia</p>
+        <h1 class="h-xl">Even the referee<br />is blind.</h1>
+        <p class="lead">
+          Two cups, five dice each, rolled encrypted on chain. You see only your own. When someone calls a lie, the contract counts every die
+          without seeing a single one, and publishes one word.
+        </p>
+        <div class="cta">
+          <button id="play-wren" class="btn btn-brass">Play Wren</button>
+          <button id="play-friend" class="btn">Play a friend</button>
+        </div>
+        <p class="fine">You need a wallet on Sepolia and a little test ETH. A whole match costs about 0.0001. <a id="faucet" target="_blank" rel="noopener">Get test ETH free</a>.</p>
+      </div>
+    </section>
+
+    <section class="band band-table" id="play">
+      <div class="wrap table-grid">
+        <div id="stage" class="stage"></div>
+        <aside class="panel">
+          <p class="eyebrow" id="table-label">No table yet</p>
+          <p class="status" id="status">Connect a wallet, then pick an opponent.</p>
+          <div id="share" class="share" hidden>
+            <p class="small">Send this link to your friend:</p>
+            <input id="share-link" readonly />
+          </div>
+          <div id="controls" class="controls" hidden>
+            <p class="small">Your bid</p>
+            <div class="qty">
+              <button id="qty-down" class="btn btn-square" aria-label="Fewer dice">−</button>
+              <output id="qty">1</output>
+              <button id="qty-up" class="btn btn-square" aria-label="More dice">+</button>
+              <span class="x">×</span>
+            </div>
+            <div id="faces" class="faces"></div>
+            <p class="small hint">Ones are wild: they count toward any face, unless ones themselves are bid.</p>
+            <div class="row">
+              <button id="bid" class="btn btn-brass">Bid</button>
+              <button id="call" class="btn btn-red">Call it a lie</button>
+            </div>
+          </div>
+          <div id="problem" class="problem" hidden>
+            <p id="error"></p>
+            <button id="retry" class="btn btn-small"></button>
+          </div>
+          <p class="small" id="tx"></p>
+          <p class="small warn" id="low" hidden>Your test ETH is running low. <a target="_blank" rel="noopener" class="faucet-link">Top up free</a>.</p>
+        </aside>
+      </div>
+    </section>
+
+    <section class="band band-paper" id="wren">
+      <div class="wrap two">
+        <div>
+          <p class="eyebrow">The house player</p>
+          <h2 class="h-lg">Wren</h2>
+        </div>
+        <div>
+          <p class="lead dark" id="wren-blurb">Plays the river taverns. Never looks at your cup, because she can't.</p>
+          <ul class="facts">
+            <li><strong>Her habit.</strong> <span id="wren-habit">She always opens on the face she holds most.</span></li>
+            <li><strong>Her tell.</strong> <span id="wren-tell">Watch her hands.</span></li>
+            <li><strong>Her seat.</strong> She never sends a transaction. She signs each move and your wallet carries it, so she plays without ever holding gas.</li>
+            <li><strong>Her limits.</strong> The Zama ACL lets her decrypt her own five dice and nothing else, so she can't cheat any more than you can.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="band band-dark" id="fair">
+      <div class="wrap">
+        <p class="eyebrow">How it stays fair</p>
+        <h2 class="h-lg">Nobody sees the dice. Not even the game.</h2>
+        <div class="three">
+          <div>
+            <p class="num">01</p>
+            <h3>Rolled encrypted</h3>
+            <p>Each die is drawn on chain from Zama's encrypted randomness. No server, no player and no developer picks a value or can read one.</p>
+          </div>
+          <div>
+            <p class="num">02</p>
+            <h3>Counted blind</h3>
+            <p>When a bid is called, the contract counts all ten dice for that face, ones wild, entirely on ciphertexts, and compares the count with the bid.</p>
+          </div>
+          <div>
+            <p class="num">03</p>
+            <h3>One bit out</h3>
+            <p>Only that answer is made public: the bid held, or it was a lie. Zama's KMS signs it and the contract checks the proof. The cups stay sealed forever.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band band-brass" id="why">
+      <div class="wrap two">
+        <div>
+          <p class="eyebrow dark">The obvious question</p>
+          <h2 class="h-lg dark">Why not commit-reveal?</h2>
+        </div>
+        <div class="dark">
+          <p>Commit-reveal settles a call by making both players open their cups. That breaks liar's dice three ways.</p>
+          <ul class="facts">
+            <li><strong>The loser can walk.</strong> Whoever sees they are losing just never reveals. Here nobody reveals anything: the count runs on ciphertexts and anyone can settle it.</li>
+            <li><strong>The bluff dies with the reveal.</strong> Once your cup is open, everyone knows how you bid with it. Here your dice are never shown, so your style stays yours.</li>
+            <li><strong>Someone still rolls the dice.</strong> Commitments hide values a player chose. Here the dice come from encrypted on-chain randomness that no one chose.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <footer class="band band-dark foot">
+      <div class="wrap foot-in">
+        <span class="mark">BLIND CUP</span>
+        <span class="small">Contract <a id="contract-link" target="_blank" rel="noopener"></a></span>
+        <span class="small">Built on the Zama Protocol. Testnet only.</span>
+      </div>
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
