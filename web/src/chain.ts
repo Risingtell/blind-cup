@@ -1,6 +1,7 @@
 /**
  * Chain access. Reads go to a public RPC pinned to the block of our last transaction (load-balanced nodes
- * lag); writes go through the player's own wallet with a low tip, so a whole match costs pennies of test ETH.
+ * lag). The player's wallet only signs and broadcasts: gas, fees and receipts all come from our own node,
+ * because some wallets' Sepolia nodes fail plain reads. A low tip keeps a whole match to pennies of test ETH.
  */
 import {
   BrowserProvider,
@@ -10,6 +11,8 @@ import {
   JsonRpcProvider,
   parseUnits,
   type Signer,
+  toQuantity,
+  type TransactionReceipt,
 } from "ethers";
 
 import ABI from "../../bot/BlindCup.abi.json";
@@ -89,10 +92,49 @@ export async function cupHandles(id: bigint, round: number, seat: number, block:
   });
 }
 
+/** Puts the wallet on Sepolia, adding the network if the wallet has never seen it. */
+async function useSepolia(eth: Eip1193Provider) {
+  if (Number(await eth.request({ method: "eth_chainId" })) === CHAIN_ID) return;
+  try {
+    await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: CHAIN_HEX }] });
+  } catch (e) {
+    if ((e as { code?: number }).code !== 4902) throw e;
+    await eth.request({
+      method: "wallet_addEthereumChain",
+      params: [
+        {
+          chainId: CHAIN_HEX,
+          chainName: "Sepolia",
+          nativeCurrency: { name: "Sepolia ETH", symbol: "ETH", decimals: 18 },
+          rpcUrls: [READ_RPC],
+          blockExplorerUrls: ["https://sepolia.etherscan.io"],
+        },
+      ],
+    });
+  }
+}
+
+/** Wallets reject with plain objects; ethers adds a short message to contract reverts. Make both readable. */
+function asError(e: unknown): Error {
+  const x = e as { shortMessage?: string; message?: string; revert?: { name?: string }; data?: string };
+  let refused = x?.revert?.name;
+  if (!refused && typeof x?.data === "string") {
+    try {
+      refused = readCup.interface.parseError(x.data)?.name;
+    } catch {
+      // not one of the contract's errors
+    }
+  }
+  if (refused) return new Error(`The table refused that move (${refused}).`);
+  if (e instanceof Error) return new Error(x.shortMessage ?? e.message);
+  return new Error(x?.message ?? String(e));
+}
+
 export class Wallet {
   private constructor(
     readonly signer: Signer,
     readonly address: string,
+    private readonly injected?: Eip1193Provider,
   ) {}
 
   /**
@@ -115,27 +157,15 @@ export class Wallet {
     const dev = await Wallet.devWallet();
     if (dev) return dev;
     if (!window.ethereum) throw new Error("No wallet found. Install MetaMask or Rabby, then reload.");
-    await window.ethereum.request({ method: "eth_requestAccounts" });
     try {
-      await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: CHAIN_HEX }] });
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+      await useSepolia(window.ethereum);
+      const provider = new BrowserProvider(window.ethereum, CHAIN_ID);
+      const signer = await provider.getSigner();
+      return new Wallet(signer, await signer.getAddress(), window.ethereum);
     } catch (e) {
-      if ((e as { code?: number }).code !== 4902) throw e;
-      await window.ethereum.request({
-        method: "wallet_addEthereumChain",
-        params: [
-          {
-            chainId: CHAIN_HEX,
-            chainName: "Sepolia",
-            nativeCurrency: { name: "Sepolia ETH", symbol: "ETH", decimals: 18 },
-            rpcUrls: [READ_RPC],
-            blockExplorerUrls: ["https://sepolia.etherscan.io"],
-          },
-        ],
-      });
+      throw asError(e);
     }
-    const provider = new BrowserProvider(window.ethereum, CHAIN_ID);
-    const signer = await provider.getSigner();
-    return new Wallet(signer, await signer.getAddress());
   }
 
   async balance() {
@@ -143,22 +173,50 @@ export class Wallet {
   }
 
   /** Sends a BlindCup call with a low tip and waits for it. Returns the receipt. */
-  async send(method: string, ...args: unknown[]): Promise<ContractTransactionReceipt> {
-    const cup = new Contract(BLINDCUP, ABI, this.signer);
-    const base = (await reader.getBlock("latest"))?.baseFeePerGas ?? 0n;
-    const tip = parseUnits(TIP_GWEI, "gwei");
-    const tx = await cup.getFunction(method)(...args, {
-      maxPriorityFeePerGas: tip,
-      maxFeePerGas: base * 4n + tip * 2n,
-    });
-    const receipt = (await tx.wait()) as ContractTransactionReceipt | null;
+  async send(method: string, ...args: unknown[]): Promise<TransactionReceipt> {
+    let receipt: TransactionReceipt | null;
+    try {
+      const base = (await reader.getBlock("latest"))?.baseFeePerGas ?? 0n;
+      const tip = parseUnits(TIP_GWEI, "gwei");
+      const fees = { maxPriorityFeePerGas: tip, maxFeePerGas: base * 4n + tip * 2n };
+      if (!this.injected) {
+        // The local test key: ethers signs and sends through our own node.
+        const tx = await new Contract(BLINDCUP, ABI, this.signer).getFunction(method)(...args, fees);
+        receipt = (await tx.wait()) as ContractTransactionReceipt | null;
+      } else {
+        // Estimating on our node also stops a move the contract would refuse before the wallet opens.
+        const fn = readCup.getFunction(method);
+        // A lagging node may not have seen our last move yet, so a refusal is only believed after a few tries.
+        const gas = await retry(() => fn.estimateGas(...args, { from: this.address }), 5, 2500);
+        const { data } = await fn.populateTransaction(...args);
+        await useSepolia(this.injected);
+        const hash = (await this.injected.request({
+          method: "eth_sendTransaction",
+          params: [
+            {
+              from: this.address,
+              to: BLINDCUP,
+              data,
+              value: "0x0",
+              gas: toQuantity((gas * 5n) / 4n),
+              maxFeePerGas: toQuantity(fees.maxFeePerGas),
+              maxPriorityFeePerGas: toQuantity(fees.maxPriorityFeePerGas),
+              chainId: CHAIN_HEX,
+            },
+          ],
+        })) as string;
+        receipt = await reader.waitForTransaction(hash, 1, 10 * 60_000);
+      }
+    } catch (e) {
+      throw asError(e);
+    }
     if (!receipt || receipt.status !== 1) throw new Error(`${method} failed on chain`);
     return receipt;
   }
 }
 
 /** Reads a named event from a receipt (the receipt is the source of truth; nodes lag). */
-export function eventIn(receipt: ContractTransactionReceipt, name: string) {
+export function eventIn(receipt: TransactionReceipt, name: string) {
   for (const log of receipt.logs) {
     try {
       const parsed = readCup.interface.parseLog(log);

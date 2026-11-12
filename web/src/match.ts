@@ -3,7 +3,7 @@
  * controls draw from it. Against Wren, her signed moves are relayed by the player's wallet. Against a
  * friend, both browsers watch the same table and each plays their own seat.
  */
-import type { ContractTransactionReceipt } from "ethers";
+import type { TransactionReceipt } from "ethers";
 
 import { cupHandles, eventIn, isZero, Phase, tableAt, type TableState, Wallet } from "./chain";
 import { line } from "../../bot/persona";
@@ -160,7 +160,7 @@ export class Match extends EventTarget {
 
   // ---------------------------------------------------------------- the loop
 
-  private async after(id: bigint, receipt: ContractTransactionReceipt) {
+  private async after(id: bigint, receipt: TransactionReceipt) {
     await this.sync(await tableAt(id, receipt.blockNumber));
   }
 
