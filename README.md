@@ -9,6 +9,9 @@ opened, not even after the game.
 - Contract (Sepolia):
   [`0x77A7a9eb769e63130E696a09C64c6E5F1DF58dbB`](https://sepolia.etherscan.io/address/0x77A7a9eb769e63130E696a09C64c6E5F1DF58dbB)
 - **Play: [blindcup.onepeg.app](https://blindcup.onepeg.app)** (Sepolia; a match costs about 0.0002 test ETH)
+- **No wallet? Watch a real match replayed from the chain:**
+  [a player against Wren](https://blindcup.onepeg.app/?watch=14#play) or
+  [two players, three rounds](https://blindcup.onepeg.app/?watch=15#play)
 - 19 tests (contract, the bot's mind, full matches on the mock chain); 97% statement coverage of the contract
 
 ## How a round works
@@ -63,6 +66,7 @@ Wren is a bot you can play any time. She is a character, not a solver:
 | `web/`                      | The game in the browser: Vite, Phaser, Zama's relayer SDK                      |
 | `tasks/BlindCup.ts`         | Live-network tasks: play a round, play a match against Wren, settle a table    |
 | `scripts/smoke-wren-api.ts` | Calls Wren's endpoint against Sepolia and relays her answers                   |
+| `scripts/export-match.ts`   | Saves a finished table's events for the replay (public nodes drop old logs)    |
 
 ## Run it
 

@@ -7,8 +7,12 @@ import type { TransactionReceipt } from "ethers";
 
 import { cupHandles, eventIn, isZero, Phase, tableAt, type TableState, Wallet } from "./chain";
 import { line } from "../../bot/persona";
-import { readOwnDice, readVerdict } from "./fhe";
 import { wrenCard, wrenJoin, wrenMove } from "./wren";
+
+// Zama's SDK loads on first use (sitting down at a table), not with the page.
+const fheModule = () => import("./fhe");
+const readOwnDice: typeof import("./fhe").readOwnDice = async (...a) => (await fheModule()).readOwnDice(...a);
+const readVerdict: typeof import("./fhe").readVerdict = async (...a) => (await fheModule()).readVerdict(...a);
 
 export type Reveal = {
   stage: "sealed" | "counting" | "word";
@@ -29,6 +33,8 @@ export type View = {
   reveal?: Reveal;
   lastTx?: string;
   error?: string;
+  /** A replay names both seats (seat 0, seat 1) instead of "you" and an opponent. */
+  names?: [string, string];
   /** Set when a step needs the player to press something again (a rejected wallet prompt, a stalled seat). */
   retry?: { label: string; run: () => Promise<void> };
 };

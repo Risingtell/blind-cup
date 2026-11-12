@@ -4,7 +4,7 @@ import { bestFace, countFor, isRaise, TOTAL } from "../../bot/brain";
 import { Phase, Wallet } from "./chain";
 import { addressUrl, BLINDCUP, FAUCET, txUrl } from "./config";
 import { Match, type View } from "./match";
-import { startTable } from "./scene";
+import { loadMatch, Replay } from "./replay";
 import { wrenCard } from "./wren";
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -28,7 +28,8 @@ wrenCard()
   })
   .catch(() => {});
 
-const scene = startTable($("stage"));
+// The table (Phaser) loads after the page, so the intro shows at once; the stage box already holds its shape.
+const scene = import("./scene").then((m) => m.startTable($("stage")));
 
 // ---------------------------------------------------------------- bid builder
 
@@ -101,7 +102,11 @@ async function checkBalance() {
   $("low").hidden = bal === null || bal >= 200_000_000_000_000n; // a match costs about 0.00017 ETH
 }
 
+let replay: Replay | undefined;
+
 function newMatch(w: Wallet) {
+  replay?.stop();
+  replay = undefined;
   match?.stop();
   match = new Match(w);
   match.addEventListener("change", () => paint(match!.view));
@@ -122,6 +127,24 @@ async function start(kind: "wren" | "friend") {
 $("connect").onclick = () => void ensureWallet().catch((e) => ($("status").textContent = e.message));
 $("play-wren").onclick = () => void start("wren");
 $("play-friend").onclick = () => void start("friend");
+
+// ?watch=N replays a finished match from the chain. No wallet, no gas.
+const watched = new URLSearchParams(location.search).get("watch");
+if (watched && /^\d+$/.test(watched)) {
+  void (async () => {
+    try {
+      $("status").textContent = `Loading table ${watched} from the chain...`;
+      const card = await wrenCard().catch(() => null);
+      replay = new Replay(await loadMatch(BigInt(watched)), card?.address ?? null);
+      const r = replay;
+      r.addEventListener("change", () => replay === r && paint(r.view));
+      $("play").scrollIntoView({ behavior: "smooth" });
+      await r.play();
+    } catch (e) {
+      $("status").textContent = e instanceof Error ? e.message : String(e);
+    }
+  })();
+}
 
 const linked = new URLSearchParams(location.search).get("table");
 if (linked && /^\d+$/.test(linked)) {
@@ -153,18 +176,22 @@ if (linked && /^\d+$/.test(linked)) {
 // ---------------------------------------------------------------- painting
 
 function paint(v: View) {
-  scene.render(v);
+  void scene.then((s) => s.render(v));
   const t = v.table;
   $("sit").hidden = true;
   // Keep the table in the address bar, so a refresh or a reopened tab comes back to it.
-  if (t) {
+  if (t && !v.names) {
+    // (not for a replay: its address stays ?watch=N)
     const url = new URL(location.href);
-    if (url.searchParams.get("table") !== String(t.id)) {
+    if (url.searchParams.get("table") !== String(t.id) || url.searchParams.has("watch")) {
+      url.searchParams.delete("watch");
       url.searchParams.set("table", String(t.id));
       history.replaceState(null, "", url);
     }
   }
-  $("table-label").textContent = t ? `Table ${t.id} · round ${t.round || 1}` : "No table yet";
+  $("table-label").textContent = t
+    ? `${v.names ? "Replay · " : ""}Table ${t.id} · round ${t.round || 1}`
+    : "No table yet";
   $("status").textContent = v.status;
 
   const showShare = Boolean(t && t.phase === Phase.Open && v.opponent === "friend");

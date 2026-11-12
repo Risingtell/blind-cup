@@ -4,7 +4,6 @@ coverage
 coverage.json
 dist
 fhevmTemp
-types
 deployments
 web/node_modules
 web/dist

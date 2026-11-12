@@ -184,13 +184,15 @@ export class TableScene extends Phaser.Scene {
     this.view = v;
     if (!this.dice) return; // not created yet; create() will render
     const t = v.table;
-    const opp = v.opponent === "wren" ? "WREN" : v.opponent === "friend" ? "YOUR FRIEND" : "";
+    const names = v.names; // a replay: both seats named, nobody is "you"
+    const opp = names ? names[1] : v.opponent === "wren" ? "WREN" : v.opponent === "friend" ? "YOUR FRIEND" : "";
     this.oppName.setText(opp);
     const done = t?.phase === 3;
     const iWon = done && v.mySeat !== null && t!.winner.toLowerCase() === t!.players[v.mySeat].toLowerCase();
+    const winnerName = names && done ? names[t!.winner.toLowerCase() === t!.players[0].toLowerCase() ? 0 : 1] : "";
     this.idle
-      .setText(!t ? "PULL UP A CHAIR" : done ? (iWon ? "YOU WIN" : `${opp} WINS`) : "")
-      .setColor(done && !iWon ? hex(C.red) : hex(C.bone));
+      .setText(!t ? "PULL UP A CHAIR" : done ? (names ? `${winnerName} WINS` : iWon ? "YOU WIN" : `${opp} WINS`) : "")
+      .setColor(done && !iWon && !names ? hex(C.red) : hex(C.bone));
     this.idle.setFontSize(done ? 96 : 44);
     this.wrenCup.setVisible(Boolean(t));
     this.myCup.setVisible(Boolean(t));
@@ -207,10 +209,14 @@ export class TableScene extends Phaser.Scene {
     }
 
     // score
-    if (t && v.mySeat !== null) {
+    const pips = (n: number) => "●".repeat(n) + "○".repeat(Math.max(0, 2 - n));
+    if (t && names) {
+      this.score.setText(
+        `${names[0]} ${pips(t.wins[0])}     ROUND ${t.round || 1} · BEST OF 3     ${pips(t.wins[1])} ${names[1]}`,
+      );
+    } else if (t && v.mySeat !== null) {
       const me = t.wins[v.mySeat];
       const them = t.wins[1 - v.mySeat];
-      const pips = (n: number) => "●".repeat(n) + "○".repeat(Math.max(0, 2 - n));
       this.score.setText(`YOU ${pips(me)}     ROUND ${t.round || 1} · BEST OF 3     ${pips(them)} ${opp}`);
     } else this.score.setText("");
 
