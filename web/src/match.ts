@@ -40,6 +40,17 @@ export class Match extends EventTarget {
   view: View = { table: null, mySeat: null, opponent: null, myDice: null, status: "", busy: false, myTurn: false };
   private diceRound = 0;
   private settling = false;
+  private inFlight = 0;
+
+  /** Sends through the player's wallet, counting what is in flight so the poller doesn't offer stale buttons. */
+  private async send(method: string, ...args: unknown[]) {
+    this.inFlight++;
+    try {
+      return await this.wallet.send(method, ...args);
+    } finally {
+      this.inFlight--;
+    }
+  }
   private wrenSeq = 0;
   private polling = false;
   private stopped = false;
@@ -79,7 +90,7 @@ export class Match extends EventTarget {
   playWren() {
     return this.guard("Try again", async () => {
       this.set({ opponent: "wren", status: "Opening a table. Confirm in your wallet." });
-      const open = await this.wallet.send("openTable");
+      const open = await this.send("openTable");
       const id = eventIn(open, "TableOpened")!.tableId as bigint;
       this.set({ status: `Table ${id} is open. Wren is signing her seat...`, lastTx: open.hash });
       await this.seatWren(id, open.blockNumber);
@@ -91,7 +102,7 @@ export class Match extends EventTarget {
     this.set({
       status: "Wren signed her seat. Confirm in your wallet to bring her to the table (this rolls both cups).",
     });
-    const join = await this.wallet.send("joinTableBySig", id, signature);
+    const join = await this.send("joinTableBySig", id, signature);
     this.set({ lastTx: join.hash });
     await this.after(id, join);
   }
@@ -99,7 +110,7 @@ export class Match extends EventTarget {
   openForFriend() {
     return this.guard("Try again", async () => {
       this.set({ opponent: "friend", status: "Opening a table. Confirm in your wallet." });
-      const open = await this.wallet.send("openTable");
+      const open = await this.send("openTable");
       const id = eventIn(open, "TableOpened")!.tableId as bigint;
       this.set({ lastTx: open.hash });
       await this.after(id, open);
@@ -109,7 +120,7 @@ export class Match extends EventTarget {
   joinFriend(id: bigint) {
     return this.guard("Try again", async () => {
       this.set({ opponent: "friend", status: `Taking the empty seat at table ${id}. Confirm in your wallet.` });
-      const join = await this.wallet.send("joinTable", id);
+      const join = await this.send("joinTable", id);
       this.set({ lastTx: join.hash });
       await this.after(id, join);
     });
@@ -133,7 +144,7 @@ export class Match extends EventTarget {
     const t = this.view.table!;
     return this.guard("Place the bid again", async () => {
       this.set({ status: `Bidding ${quantity} x ${face + 1}s. Confirm in your wallet.` });
-      const r = await this.wallet.send("placeBid", t.id, quantity, face);
+      const r = await this.send("placeBid", t.id, quantity, face);
       this.set({ lastTx: r.hash });
       await this.after(t.id, r);
     });
@@ -143,7 +154,7 @@ export class Match extends EventTarget {
     const t = this.view.table!;
     return this.guard("Call it again", async () => {
       this.set({ status: "Calling the bid a lie. Confirm in your wallet." });
-      const r = await this.wallet.send("challenge", t.id);
+      const r = await this.send("challenge", t.id);
       this.set({ lastTx: r.hash });
       await this.after(t.id, r);
     });
@@ -152,7 +163,7 @@ export class Match extends EventTarget {
   claimTimeout() {
     const t = this.view.table!;
     return this.guard("Claim again", async () => {
-      const r = await this.wallet.send("claimTimeout", t.id);
+      const r = await this.send("claimTimeout", t.id);
       this.set({ lastTx: r.hash });
       await this.after(t.id, r);
     });
@@ -168,7 +179,8 @@ export class Match extends EventTarget {
   private async sync(t: TableState): Promise<void> {
     if (this.stopped) return;
     const mySeat = t.players.findIndex((p) => same(p, this.wallet.address));
-    this.set({ table: t, mySeat: mySeat < 0 ? null : mySeat });
+    // A new table state makes any earlier error or offered button stale.
+    this.set({ table: t, mySeat: mySeat < 0 ? null : mySeat, error: undefined, retry: undefined });
     if (mySeat < 0) return this.set({ status: "You are not seated at this table.", myTurn: false });
 
     if (t.phase === Phase.Open) {
@@ -231,8 +243,8 @@ export class Match extends EventTarget {
     this.set({ status: `Wren ${what}. Confirm in your wallet to put her signed move on the table.` });
     const r =
       m.play.kind === "challenge"
-        ? await this.wallet.send("challengeBySig", t.id, m.signature)
-        : await this.wallet.send("placeBidBySig", t.id, m.play.quantity, m.play.face, m.signature);
+        ? await this.send("challengeBySig", t.id, m.signature)
+        : await this.send("placeBidBySig", t.id, m.play.quantity, m.play.face, m.signature);
     this.set({ lastTx: r.hash });
     await this.after(t.id, r);
   }
@@ -263,16 +275,36 @@ export class Match extends EventTarget {
       this.set({ status: "Waiting for the caller to settle the round on chain..." });
       return this.watch(t);
     }
+    try {
+      await this.settle(t, { held, proof });
+    } catch (e) {
+      // Settling has its own retry; the step that led here (a call, a bid) must not be offered again.
+      this.set({
+        error: e instanceof Error ? e.message.slice(0, 200) : String(e),
+        retry: { label: "Settle the round", run: () => this.guard("Settle the round", () => this.settle(t)) },
+      });
+    }
+  }
+
+  /**
+   * Puts the verdict on chain with its KMS proof, which also rolls the next round. Anyone may do it, so either
+   * player can. If the other player settled first, the contract refuses this one and we just catch up.
+   */
+  private async settle(t: TableState, verdict?: { held: boolean; proof: string }) {
     if (this.settling) return;
     this.settling = true;
     try {
+      const { held, proof } = verdict ?? (await readVerdict(t.verdictHandle));
       this.set({
         status:
           "Settle the round on chain with the Zama proof. Confirm in your wallet (this also rolls the next cups).",
       });
-      const r = await this.wallet.send("resolve", t.id, held, proof);
+      const r = await this.send("resolve", t.id, held, proof);
       this.set({ lastTx: r.hash });
       await this.after(t.id, r);
+    } catch (e) {
+      if (e instanceof Error && /NotRevealing/.test(e.message)) return this.sync(await tableAt(t.id));
+      throw e;
     } finally {
       this.settling = false;
     }
@@ -286,6 +318,7 @@ export class Match extends EventTarget {
   private async watch(t: TableState): Promise<void> {
     if (this.polling) return;
     this.polling = true;
+    const since = Date.now();
     try {
       for (;;) {
         await sleep(4000);
@@ -297,8 +330,16 @@ export class Match extends EventTarget {
           return this.sync(now);
         }
         const stalled = now.phase === Phase.Bidding && now.deadline > 0 && Date.now() / 1000 > now.deadline + 15;
+        if (this.inFlight || this.settling) continue; // a move of ours is on its way; offer nothing until it lands
         if (stalled && now.turn !== this.view.mySeat && !this.view.retry) {
           this.set({ retry: { label: "Claim the win (they ran out of time)", run: () => this.claimTimeout() } });
+        }
+        // The caller normally settles. If they haven't after half a minute, let this player do it.
+        if (now.phase === Phase.Revealing && Date.now() - since > 30_000 && !this.view.retry) {
+          this.set({
+            status: "The caller hasn't settled the round yet. You can settle it yourself.",
+            retry: { label: "Settle it yourself", run: () => this.guard("Settle it yourself", () => this.settle(now)) },
+          });
         }
       }
     } finally {

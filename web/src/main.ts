@@ -125,15 +125,29 @@ $("play-friend").onclick = () => void start("friend");
 
 const linked = new URLSearchParams(location.search).get("table");
 if (linked && /^\d+$/.test(linked)) {
-  $("status").textContent = `You were invited to table ${linked}. Connect your wallet to sit down.`;
-  $("connect").onclick = async () => {
+  // An invited friend, or a player coming back after a refresh, must land on that table, so the big button
+  // takes the seat there instead of opening a new table.
+  const sit = async () => {
     try {
       const w = await ensureWallet();
+      $("play").scrollIntoView({ behavior: "smooth" });
       await newMatch(w).resume(BigInt(linked));
     } catch (e) {
       $("status").textContent = e instanceof Error ? e.message : String(e);
     }
   };
+  $("status").textContent = `Your seat is waiting at table ${linked}.`;
+  for (const id of ["play-friend", "sit"]) {
+    const b = $(id);
+    b.textContent = `Take your seat at table ${linked}`;
+    b.classList.add("btn-brass");
+    b.hidden = false;
+    b.onclick = () => void sit();
+  }
+  $("play-wren").classList.remove("btn-brass");
+  $("invited").hidden = false;
+  $("invited").textContent = `Your seat is waiting at table ${linked}.`;
+  $("connect").onclick = () => void sit();
 }
 
 // ---------------------------------------------------------------- painting
@@ -141,6 +155,15 @@ if (linked && /^\d+$/.test(linked)) {
 function paint(v: View) {
   scene.render(v);
   const t = v.table;
+  $("sit").hidden = true;
+  // Keep the table in the address bar, so a refresh or a reopened tab comes back to it.
+  if (t) {
+    const url = new URL(location.href);
+    if (url.searchParams.get("table") !== String(t.id)) {
+      url.searchParams.set("table", String(t.id));
+      history.replaceState(null, "", url);
+    }
+  }
   $("table-label").textContent = t ? `Table ${t.id} · round ${t.round || 1}` : "No table yet";
   $("status").textContent = v.status;
 

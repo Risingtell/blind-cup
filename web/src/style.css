@@ -133,6 +133,17 @@ a {
   font-size: 0.85rem;
   opacity: 0.8;
 }
+.invited {
+  display: inline-block;
+  margin: 1.5rem 0 0;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--brass);
+  color: var(--brass);
+  font-weight: 600;
+}
+.invited[hidden] {
+  display: none;
+}
 .cta {
   display: flex;
   flex-wrap: wrap;

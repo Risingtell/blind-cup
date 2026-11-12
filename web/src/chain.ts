@@ -126,6 +126,9 @@ function asError(e: unknown): Error {
     }
   }
   if (refused) return new Error(`The table refused that move (${refused}).`);
+  if (/insufficient funds/i.test(`${x?.shortMessage ?? ""} ${x?.message ?? ""}`)) {
+    return new Error("Your wallet doesn't have enough test ETH for this move. Top it up free, then try again.");
+  }
   if (e instanceof Error) return new Error(x.shortMessage ?? e.message);
   return new Error(x?.message ?? String(e));
 }
@@ -142,8 +145,9 @@ export class Wallet {
    * be played and checked without a browser extension. Never part of a production build.
    */
   static async devWallet(): Promise<Wallet | null> {
-    if (!import.meta.env.DEV || !new URLSearchParams(location.search).has("devwallet")) return null;
-    const { key } = (await (await fetch("/api/dev-wallet")).json()) as { key: string };
+    const which = new URLSearchParams(location.search).get("devwallet");
+    if (!import.meta.env.DEV || which === null) return null;
+    const { key } = (await (await fetch(`/api/dev-wallet${which === "2" ? "?n=2" : ""}`)).json()) as { key: string };
     const { Wallet: KeyWallet } = await import("ethers");
     const w = new KeyWallet(key, reader);
     return new Wallet(w, w.address);
@@ -178,7 +182,9 @@ export class Wallet {
     try {
       const base = (await reader.getBlock("latest"))?.baseFeePerGas ?? 0n;
       const tip = parseUnits(TIP_GWEI, "gwei");
-      const fees = { maxPriorityFeePerGas: tip, maxFeePerGas: base * 4n + tip * 2n };
+      // A node accepts a transaction only if the wallet holds gas limit x max fee, so keep the cap close to the real
+      // price: room for the base fee to triple, plus the tip. Sepolia's base fee is near zero.
+      const fees = { maxPriorityFeePerGas: tip, maxFeePerGas: base * 3n + tip };
       if (!this.injected) {
         // The local test key: ethers signs and sends through our own node.
         const tx = await new Contract(BLINDCUP, ABI, this.signer).getFunction(method)(...args, fees);

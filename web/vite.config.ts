@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
+import { HDNodeWallet } from "ethers";
 import { defineConfig, type Plugin } from "vite";
 
 /**
@@ -14,10 +15,13 @@ function wrenDev(): Plugin {
       const vars = join(process.env.APPDATA ?? "", "hardhat-nodejs", "Config", "vars.json");
       const stored = existsSync(vars) ? (JSON.parse(readFileSync(vars, "utf8")).vars ?? {}) : {};
       process.env.WREN_PRIVATE_KEY ??= stored.WREN_PRIVATE_KEY?.value;
-      // A throwaway test player for ?devwallet, served only by this dev server and only to localhost.
+      // Throwaway test players for ?devwallet (and ?devwallet=2, a second seat for testing friend matches),
+      // served only by this dev server and only to localhost.
       server.middlewares.use("/api/dev-wallet", (req, res) => {
         const local = ["127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(req.socket.remoteAddress ?? "");
-        const key = stored.PLAYER_PRIVATE_KEY?.value;
+        const second = new URLSearchParams((req.originalUrl ?? req.url ?? "").split("?")[1]).get("n") === "2";
+        const phrase = stored.MNEMONIC?.value as string | undefined;
+        const key = second ? phrase && HDNodeWallet.fromPhrase(phrase).privateKey : stored.PLAYER_PRIVATE_KEY?.value;
         res.statusCode = local && key ? 200 : 404;
         res.end(local && key ? JSON.stringify({ key }) : "{}");
       });
