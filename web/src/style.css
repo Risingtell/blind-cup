@@ -19,6 +19,7 @@
 }
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 4.5rem; /* jumps stop below the sticky top bar */
 }
 body {
   margin: 0;
@@ -318,6 +319,12 @@ a {
 .three > div {
   padding: 2rem 2rem 0 0;
 }
+.three.four {
+  grid-template-columns: repeat(4, 1fr);
+}
+.band-how {
+  border-top: 1px solid rgba(241, 233, 214, 0.12);
+}
 .three > div + div {
   padding-left: 2rem;
   border-left: 1px solid rgba(241, 233, 214, 0.18);
@@ -347,7 +354,8 @@ a {
 @media (max-width: 900px) {
   .table-grid,
   .two,
-  .three {
+  .three,
+  .three.four {
     grid-template-columns: 1fr;
   }
   .three > div + div {
