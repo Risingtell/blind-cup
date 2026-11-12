@@ -13,6 +13,7 @@ opened, not even after the game.
   [a player against Wren](https://blindcup.onepeg.app/?watch=14#play) or
   [two players, three rounds](https://blindcup.onepeg.app/?watch=15#play)
 - 19 tests (contract, the bot's mind, full matches on the mock chain); 97% statement coverage of the contract
+- **Judging? [JUDGE-QUICKSTART.md](JUDGE-QUICKSTART.md)**: watch, play and check every claim in five minutes
 
 ## How a round works
 
