@@ -15,6 +15,8 @@ opened, not even after the game.
 - 19 tests (contract, the bot's mind, full matches on the mock chain); 97% statement coverage of the contract
 - **Judging? [JUDGE-QUICKSTART.md](JUDGE-QUICKSTART.md)**: watch, play and check every claim in five minutes
 
+> This project is not audited, endorsed or operated by Zama. Use at your own risk.
+
 ## How a round works
 
 1. **Rolled encrypted.** When the second player sits down, the contract draws ten dice from Zama's encrypted on-chain
