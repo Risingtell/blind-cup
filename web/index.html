@@ -50,6 +50,9 @@
           <a id="faucet" target="_blank" rel="noopener">Get test ETH free</a>.
         </p>
         <p class="fine">
+          Playing a friend? Either of you can put up a hidden stake in Zama's test cUSDT; nobody sees the amounts.
+        </p>
+        <p class="fine">
           No wallet? Watch a real match from the chain:
           <a href="/?watch=14#play">a player against Wren</a> or <a href="/?watch=15#play">two players, three rounds</a>.
         </p>
@@ -104,6 +107,21 @@
           <div id="share" class="share" hidden>
             <p class="small">Send this link to your friend:</p>
             <input id="share-link" readonly />
+          </div>
+          <div id="stake" class="stake" hidden>
+            <p class="eyebrow">Hidden stake · test cUSDT</p>
+            <p class="small" id="stake-note"></p>
+            <div id="stake-form" class="stake-form" hidden>
+              <input id="stake-amount" type="number" min="1" step="1" value="5" aria-label="Stake in cUSDT" />
+              <button id="stake-btn" class="btn btn-brass">Stake hidden</button>
+            </div>
+            <button id="stake-skip" class="btn btn-small" hidden></button>
+            <button id="purse-pay" class="btn btn-brass" hidden>Pay out the stakes</button>
+            <p class="small">
+              <button id="cusdt-show" class="linkish">Show my cUSDT</button> <span id="cusdt"></span> ·
+              <button id="cusdt-get" class="linkish">Get 20 free test cUSDT</button>
+            </p>
+            <p class="small" id="stake-status"></p>
           </div>
           <div id="controls" class="controls" hidden>
             <p class="small">Your bid</p>

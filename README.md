@@ -6,13 +6,17 @@ Two cups, five dice each, rolled encrypted on chain. You see only your own. When
 counts every die without seeing a single one and publishes one word: the bid held, or it was a lie. The cups are never
 opened, not even after the game.
 
-- Contract (Sepolia):
+- Contracts (Sepolia): the game
   [`0x77A7a9eb769e63130E696a09C64c6E5F1DF58dbB`](https://sepolia.etherscan.io/address/0x77A7a9eb769e63130E696a09C64c6E5F1DF58dbB)
+  and its hidden-stakes purse
+  [`0x6A0e95C1a6dB2cA2BC16fEDad7ad03bCcf61de27`](https://sepolia.etherscan.io/address/0x6A0e95C1a6dB2cA2BC16fEDad7ad03bCcf61de27),
+  staking Zama's test cUSDT (ERC-7984)
 - **Play: [blindcup.onepeg.app](https://blindcup.onepeg.app)** (Sepolia; a match costs about 0.0002 test ETH)
 - **No wallet? Watch a real match replayed from the chain:**
   [a player against Wren](https://blindcup.onepeg.app/?watch=14#play) or
   [two players, three rounds](https://blindcup.onepeg.app/?watch=15#play)
-- 19 tests (contract, the bot's mind, full matches on the mock chain); 97% statement coverage of the contract
+- 26 tests (the game, the purse, the bot's mind, full matches on the mock chain); statement coverage 97% (game) and 98%
+  (purse)
 - **Judging? [JUDGE-QUICKSTART.md](JUDGE-QUICKSTART.md)**: watch, play and check every claim in five minutes
 
 > This project is not audited, endorsed or operated by Zama. Use at your own risk.
@@ -58,16 +62,39 @@ Wren is a bot you can play any time. She is a character, not a solver:
   move. Her wallet has sent no transactions.
 - Asking her twice in the same position returns the same signed move, so nobody can fish for a weaker one.
 
+## Hidden stakes in confidential cUSDT
+
+Two friends can play for Zama's test cUSDT, an ERC-7984 confidential token, through a purse that sits beside the game
+([`contracts/CupPurse.sol`](contracts/CupPurse.sol)).
+
+- **Hidden on the way in.** Before the cups are rolled, each player may put in a stake, encrypted in the browser. The
+  purse moves it with `confidentialTransferFrom`; nobody, not even the opponent, ever sees the amount.
+- **The table plays for the smaller stake.** The purse takes the minimum of the two stakes on ciphertexts (`FHE.min`)
+  and lets only those two players decrypt that one number, so both know what is at play and neither learns the other's
+  stake.
+- **Paid out blind.** When the match ends, anyone can settle the purse: the winner receives their own stake plus the
+  table stake, and the loser gets back whatever they put in above it. Every amount stays encrypted.
+- **No free rides.** A stake the player cannot cover moves zero (ERC-7984 semantics), and the purse only counts what it
+  actually received, so an empty purse plays for nothing and can win nothing.
+- **Proven on Sepolia:** on table 20 the host staked a hidden 5 and the guest a hidden 3. The guest won, and after
+  [the payout](https://sepolia.etherscan.io/tx/0x85e63c3a8586a206e461215ef04362fa2a91a002032e48fe3809e102d64d7e25) the
+  host held 3 fewer cUSDT and the guest 3 more. No stake or payout amount appears anywhere on the chain.
+
+The game contract is unchanged: the purse only reads its results. Matches against Wren are not staked, since she never
+sends a transaction.
+
 ## Repository
 
 | Path                        | What it is                                                                     |
 | --------------------------- | ------------------------------------------------------------------------------ |
 | `contracts/BlindCup.sol`    | The game: seating, encrypted rolls, bids, the blind count, settlement, timeout |
-| `test/`                     | Contract tests and Wren's tests, on Zama's mock FHE chain                      |
+| `contracts/CupPurse.sol`    | Hidden stakes in an ERC-7984 token, paid out from the game's result            |
+| `test/`                     | Tests for the game, the purse and Wren, on Zama's mock FHE chain               |
 | `bot/`                      | Wren: `brain.ts` (pure decisions), `service.ts` (reads, decrypts, signs)       |
 | `api/wren.ts`               | Wren's hosted endpoint: returns a signed move for the player to relay          |
 | `web/`                      | The game in the browser: Vite, Phaser, Zama's relayer SDK                      |
 | `tasks/BlindCup.ts`         | Live-network tasks: play a round, play a match against Wren, settle a table    |
+| `tasks/CupPurse.ts`         | Deploy the purse; play and pay out a staked match on Sepolia                   |
 | `scripts/smoke-wren-api.ts` | Calls Wren's endpoint against Sepolia and relays her answers                   |
 | `scripts/export-match.ts`   | Saves a finished table's events for the replay (public nodes drop old logs)    |
 
@@ -75,7 +102,7 @@ Wren is a bot you can play any time. She is a character, not a solver:
 
 ```bash
 npm install
-npx hardhat test                                   # 19 tests on the mock FHE chain
+npx hardhat test                                   # 26 tests on the mock FHE chain
 npx hardhat --network sepolia blindcup:wren        # a full match against Wren on Sepolia
 cd web && npm install && npm run dev               # the game at http://localhost:5173
 ```

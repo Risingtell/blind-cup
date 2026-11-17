@@ -1,10 +1,11 @@
 import "./style.css";
 
 import { bestFace, countFor, isRaise, TOTAL } from "../../bot/brain";
-import { Phase, Wallet } from "./chain";
+import { Phase, tableAt, Wallet } from "./chain";
 import { addressUrl, BLINDCUP, FAUCET, txUrl } from "./config";
 import { Match, type View } from "./match";
 import { loadMatch, Replay } from "./replay";
+import { StakePanel } from "./stakepanel";
 import { wrenCard } from "./wren";
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -27,6 +28,8 @@ wrenCard()
     $("wren-tell").textContent = c.tell;
   })
   .catch(() => {});
+
+const stakes = new StakePanel();
 
 // The table (Phaser) loads after the page, so the intro shows at once; the stage box already holds its shape.
 const scene = import("./scene").then((m) => m.startTable($("stage")));
@@ -154,6 +157,8 @@ if (linked && /^\d+$/.test(linked)) {
     try {
       const w = await ensureWallet();
       $("play").scrollIntoView({ behavior: "smooth" });
+      // If the host put up a hidden stake, the guest may add theirs before sitting (stakes close when cups roll).
+      await stakes.beforeSitting(w, await tableAt(BigInt(linked)));
       await newMatch(w).resume(BigInt(linked));
     } catch (e) {
       $("status").textContent = e instanceof Error ? e.message : String(e);
@@ -177,6 +182,7 @@ if (linked && /^\d+$/.test(linked)) {
 
 function paint(v: View) {
   void scene.then((s) => s.render(v));
+  stakes.update(v, wallet);
   const t = v.table;
   $("sit").hidden = true;
   // Keep the table in the address bar, so a refresh or a reopened tab comes back to it.

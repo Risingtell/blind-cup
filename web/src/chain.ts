@@ -8,6 +8,7 @@ import {
   Contract,
   type ContractTransactionReceipt,
   type Eip1193Provider,
+  type Interface,
   JsonRpcProvider,
   parseUnits,
   type Signer,
@@ -114,15 +115,21 @@ async function useSepolia(eth: Eip1193Provider) {
   }
 }
 
+/** Other contracts whose custom errors should read as plain refusals (the purse registers itself). */
+export const knownErrors: Interface[] = [];
+
 /** Wallets reject with plain objects; ethers adds a short message to contract reverts. Make both readable. */
 function asError(e: unknown): Error {
   const x = e as { shortMessage?: string; message?: string; revert?: { name?: string }; data?: string };
   let refused = x?.revert?.name;
   if (!refused && typeof x?.data === "string") {
-    try {
-      refused = readCup.interface.parseError(x.data)?.name;
-    } catch {
-      // not one of the contract's errors
+    for (const iface of [readCup.interface, ...knownErrors]) {
+      try {
+        refused = iface.parseError(x.data)?.name;
+        if (refused) break;
+      } catch {
+        // not this contract's error
+      }
     }
   }
   if (refused) return new Error(`The table refused that move (${refused}).`);
@@ -177,7 +184,13 @@ export class Wallet {
   }
 
   /** Sends a BlindCup call with a low tip and waits for it. Returns the receipt. */
-  async send(method: string, ...args: unknown[]): Promise<TransactionReceipt> {
+  send(method: string, ...args: unknown[]): Promise<TransactionReceipt> {
+    return this.sendTo(readCup, method, ...args);
+  }
+
+  /** Sends a call to any contract (the game, the purse, a token): `target` is that contract on our own node. */
+  async sendTo(target: Contract, method: string, ...args: unknown[]): Promise<TransactionReceipt> {
+    const to = await target.getAddress();
     let receipt: TransactionReceipt | null;
     try {
       const base = (await reader.getBlock("latest"))?.baseFeePerGas ?? 0n;
@@ -187,11 +200,11 @@ export class Wallet {
       const fees = { maxPriorityFeePerGas: tip, maxFeePerGas: base * 3n + tip };
       if (!this.injected) {
         // The local test key: ethers signs and sends through our own node.
-        const tx = await new Contract(BLINDCUP, ABI, this.signer).getFunction(method)(...args, fees);
+        const tx = await target.connect(this.signer).getFunction(method)(...args, fees);
         receipt = (await tx.wait()) as ContractTransactionReceipt | null;
       } else {
         // Estimating on our node also stops a move the contract would refuse before the wallet opens.
-        const fn = readCup.getFunction(method);
+        const fn = target.getFunction(method);
         // A lagging node may not have seen our last move yet, so a refusal is only believed after a few tries.
         const gas = await retry(() => fn.estimateGas(...args, { from: this.address }), 5, 2500);
         const { data } = await fn.populateTransaction(...args);
@@ -201,7 +214,7 @@ export class Wallet {
           params: [
             {
               from: this.address,
-              to: BLINDCUP,
+              to,
               data,
               value: "0x0",
               gas: toQuantity((gas * 5n) / 4n),
